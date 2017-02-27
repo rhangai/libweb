@@ -1,25 +1,116 @@
 <?php
 /**
 
-   Create an API
+   Create an API configuration object
 
 */
-class API {
+class APIRouteConfiguration {
 
+	private $api;
 	private $router;
+	private $root;
 
+	/// Construct the configuration object
+	public function __construct( $api, $router, $root ) {
+		$this->api    = $api;
+		$this->router = $router;
+		$this->root   = $root;
+	}
+	/// Add a new route
+	private function addRoute( $methods, $path, $handler ) {
+		$this->router->respond(
+		    $methods,
+			$path,
+			$handler
+		);
+	}
+	/// Register a GET method
+	public function GET( $path, $handler ) {
+		$this->addRoute( "GET", $path, $handler );
+	}
+	/// Register a POST method
+	public function POST( $path, $handler ) {
+		$this->addRoute( "GET", $path, $handler );
+	}
+	/// Register a POST and GET methods
+	public function REQUEST( $path, $handler ) {
+		$this->addRoute( array( "GET", "POST" ), $path, $handler );
+	}
+	// Register the object
+	public function registerObject( $obj, $root = null ) {
+		$methods    = get_class_methods( get_class( $obj ) );
+		$errHandler = null;
+		if ( method_exists( $obj, 'handleException' ) )
+			$errHandler = array( $obj, 'handleException' );
+
+		foreach ( $methods as $method ) {
+			$raw = false;
+			$methodName = $method;
+			if ( substr( $methodName, 0, 3 ) === 'RAW' ) {
+				$raw        = true;
+				$methodName = substr( $methodName, 3 );
+			}
+
+			$path           = null;
+			$respondMethods = null;
+
+			if ( preg_match('/^GET_(\w+)$/', $methodName, $matches ) ) {
+				$name = $matches[1];
+				$path = $api->nameToPath( $name );
+				$respondMethods = 'GET';
+			} else if ( preg_match('/^POST_(\w+)$/', $methodName, $matches ) ) {
+				$name = $matches[1];
+				$path = $api->nameToPath( $name );
+				$respondMethods = 'POST';
+			} else if ( preg_match('/^REQUEST_(\w+)$/', $methodName, $matches ) ) {
+				$name = $matches[1];
+				$path = $api->nameToPath( $name );
+				$respondMethods = array( 'POST', 'GET' );
+			}
+			if ( $path ) {
+				if ( $raw ) {
+					$handler = function() use ($obj, $method) {
+						$args = func_get_args();
+					    call_user_func_array( array( $obj, $method ), $args );
+						exit;
+					};
+				} else {
+					$handler = $api->createResponseFunction( array( $obj, $method ), $errHandler );
+                }
+				$this->addRoute(
+				    $respondMethods,
+					$path,
+					$handler
+				);
+			}
+		}
+	}
+	
+};
+
+/**
+ * API class
+ *
+ */
+class API extends APIRouteConfiguration {
+	/**
+	 *
+	 */
 	public function __construct() {
-		$this->router = new \Klein\Klein();
+		$router = new \Klein\Klein();
+		parent::__construct( $this, $router, array() );
 	}
 	/**
-	 * Dispatch the current route
+	 * Dispatch the current route calling the registered ones
 	 */
-	public function dispatch( $base = null ) {
+	public function dispatch( $options = null ) {
 		$req = \Klein\Request::createFromGlobals();
 
-		if ( $base != null ) {
-			$uri = $req->server()->get( "REQUEST_URI" ) ;
-			$req->server()->set( "REQUEST_URI", substr($uri, strlen($base)) );
+		// Options
+		if ( $options ) {
+			if ( @$options[ 'uri' ] ) {
+				$req->server()->set( "REQUEST_URI", $options['uri'] );
+			}
 		}
 
 		// Json
@@ -38,7 +129,7 @@ class API {
 					$req->paramsPost()->set( $key, $value );
 			}
 		}
-		$this->router->dispatch( $req );
+		$this->getRouter()->dispatch( $req );
 	}
 	/**
 	 * Call a response object and write a response
@@ -59,13 +150,13 @@ class API {
 		exit;
 	}
 	/**
-	 * Write the output
+	 * Send the output
 	 */
     protected function sendOutput( $output ) {
 		header( 'ContentType: application/json' );
 		echo json_encode( $output );
 	}
-	/// Cria um handler de resposta
+	// Wrap the response function
 	public function createResponseFunction( $cb, $errHandler = null ) {
 		$fn = function() use ($cb, $errHandler) {
 			$args = func_get_args();
@@ -73,67 +164,12 @@ class API {
 		};
 		return $fn;
 	}
-	/// Registra um objeto para resposta de API
-	public function register( $obj, $root = null ) {
-		$methods    = get_class_methods( get_class( $obj ) );
-		$errHandler = null;
-		if ( method_exists( $obj, 'handleException' ) )
-			$errHandler = array( $obj, 'handleException' );
-
-		foreach ( $methods as $method ) {
-			$raw = false;
-			$methodName = $method;
-			if ( substr( $methodName, 0, 3 ) === 'RAW' ) {
-				$raw        = true;
-				$methodName = substr( $methodName, 3 );
-			}
-
-			$path           = null;
-			$respondMethods = null;
-
-			if ( preg_match('/^GET_(\w+)$/', $methodName, $matches ) ) {
-				$name = $matches[1];
-				$path = $this->nameToPath( $name, $root );
-				$respondMethods = 'GET';
-			} else if ( preg_match('/^POST_(\w+)$/', $methodName, $matches ) ) {
-				$name = $matches[1];
-				$path = $this->nameToPath( $name, $root );
-				$respondMethods = 'POST';
-			} else if ( preg_match('/^REQUEST_(\w+)$/', $methodName, $matches ) ) {
-				$name = $matches[1];
-				$path = $this->nameToPath( $name, $root );
-				$respondMethods = array( 'POST', 'GET' );
-			}
-			if ( $path ) {
-				if ( $raw ) {
-					$handler = function() use ($obj, $method) {
-						$args = func_get_args();
-					    call_user_func_array( array( $obj, $method ), $args );
-						exit;
-					};
-				} else {
-					$handler = $this->createResponseFunction( array( $obj, $method ), $errHandler );
-                }
-				$this->router->respond(
-				    $respondMethods,
-					$path,
-					$handler
-				);
-			}
-		}
-
-
-	}
-
-	/// Converte um nome de método para um path
-	public function nameToPath( $name, $root ) {
+	// Convert the name to a route path
+	public function nameToPath( $name ) {
 		$path = str_replace( '_', '/', $name );
 		$path = preg_replace_callback( '/([a-z])([A-Z])/', function( $matches ) {
 			return $matches[1].'-'.strtolower( $matches[2] );
 		}, $path );
-		if ( $root )
-			return '/'.$root.'/'.$path;
 		return '/'.$path;
 	}
-
 };
