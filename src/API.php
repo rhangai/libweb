@@ -14,13 +14,17 @@ class APIRouteConfiguration {
 	public function __construct( $api, $router, $root ) {
 		$this->api    = $api;
 		$this->router = $router;
-		$this->root   = $root;
+		$this->root   = $this->normalizePath( $root, false );
+	}
+	/// Get the router
+	public function getRouter() {
+		return $this->router;
 	}
 	/// Add a new route
 	private function addRoute( $methods, $path, $handler ) {
 		$this->router->respond(
 		    $methods,
-			$path,
+			$this->normalizePath( $path ),
 			$handler
 		);
 	}
@@ -85,6 +89,23 @@ class APIRouteConfiguration {
 			}
 		}
 	}
+	/**
+	 * Normalize the path
+	 */
+    public function normalizePath( $path, $useRoot = true ) {
+		if ( $useRoot )
+			$path = $this->root.'/'.$path;
+		
+		if ( $path[0] !== '/' )
+			$path = '/'.$path;
+		if ( $path[strlen($path)-1] === '/' )
+			$path = substr( $path, 0, strlen($path)-1 );
+
+		$path = preg_replace( '/\\\\/', '/', $path );
+		$path = preg_replace( '/\\/\\/+/', '/', $path );
+		
+		return $path;
+	}
 	
 };
 
@@ -96,9 +117,9 @@ class API extends APIRouteConfiguration {
 	/**
 	 *
 	 */
-	public function __construct() {
+	public function __construct( $root = '/' ) {
 		$router = new \Klein\Klein();
-		parent::__construct( $this, $router, array() );
+		parent::__construct( $this, $router, $root );
 	}
 	/**
 	 * Dispatch the current route calling the registered ones
