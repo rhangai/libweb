@@ -1,4 +1,4 @@
-<?php namespace \LibWeb;
+<?php namespace LibWeb;
 /**
 
    Create an API configuration object
