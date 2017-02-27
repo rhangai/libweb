@@ -11,5 +11,10 @@
             "name": "renanhangai",
             "email": "hangai.renan@gmail.com"
         }
-    ]
+    ],
+	"autoload": {
+		"psr-4": {
+			"LibWeb\\": "src/"
+		}
+	}	
 }
