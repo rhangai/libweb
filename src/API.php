@@ -149,13 +149,6 @@ class API extends APIRouteConfiguration {
 		}
 		exit;
 	}
-	/**
-	 * Send the output
-	 */
-    protected function sendOutput( $output ) {
-		header( 'ContentType: application/json' );
-		echo json_encode( $output );
-	}
 	// Wrap the response function
 	public function createResponseFunction( $cb, $errHandler = null ) {
 		$fn = function() use ($cb, $errHandler) {
@@ -164,8 +157,17 @@ class API extends APIRouteConfiguration {
 		};
 		return $fn;
 	}
-	// Convert the name to a route path
-	public function nameToPath( $name ) {
+	/**
+	 * Send the output
+	 */
+    protected function sendOutput( $output ) {
+		header( 'ContentType: application/json' );
+		echo json_encode( $output );
+	}
+	/**
+	 * Convert a method name to a path
+	 */
+    public function nameToPath( $name ) {
 		$path = str_replace( '_', '/', $name );
 		$path = preg_replace_callback( '/([a-z])([A-Z])/', function( $matches ) {
 			return $matches[1].'-'.strtolower( $matches[2] );
