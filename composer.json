@@ -1,6 +1,6 @@
 {
-    "name": "renanhangai/php-helper",
-    "description": "PHPHelper classes",
+    "name": "renanhangai/libweb",
+    "description": "Some PHP utility classes",
     "type": "library",
     "require": {
         "klein/klein": "^2.1"
