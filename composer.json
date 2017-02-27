@@ -1,21 +1,21 @@
 {
-    "name": "renanhangai/libweb",
-    "description": "Some PHP utility classes",
-	"version": "v0.0.4",
-    "type": "library",
-    "require": {
-        "klein/klein": "^2.1"
-    },
-    "license": "ISC",
-    "authors": [
-        {
-            "name": "renanhangai",
-            "email": "hangai.renan@gmail.com"
-        }
-    ],
+	"name": "renanhangai/libweb",
+	"description": "Some PHP utility classes",
+	"version": "0.0.5",
+	"type": "library",
+	"require": {
+		"klein/klein": "^2.1"
+	},
+	"license": "ISC",
+	"authors": [
+		{
+			"name": "renanhangai",
+			"email": "hangai.renan@gmail.com"
+		}
+	],
 	"autoload": {
 		"psr-4": {
 			"LibWeb\\": "src/"
 		}
-	}	
+	}
 }
