@@ -14,9 +14,9 @@ class DB {
 	
 	protected function createConnection( $options ) {
 		return new PDO(
-		    $options['url'],
-		    $options['user'],
-			$options['password']
+		    @$options['url'] ?: Config::get( 'PDO.url' ),
+		    @$options['user'] ?: Config::get( 'PDO.user' ),
+			@$options['password'] ?: Config::get( 'PDO.password' )
 		);
 	}
 
