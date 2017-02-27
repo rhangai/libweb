@@ -108,6 +108,9 @@ class API extends APIRouteConfiguration {
 
 		// Options
 		if ( $options ) {
+			if ( is_string( $options ) )
+				$options = array( "uri" => $options );
+			   
 			if ( @$options[ 'uri' ] ) {
 				$req->server()->set( "REQUEST_URI", $options['uri'] );
 			}
