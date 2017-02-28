@@ -181,7 +181,6 @@ class API extends APIRouteConfiguration {
 
 			$this->sendOutput( array( "status" => "error", "error" => $data ) );
 		}
-		exit;
 	}
 	// Wrap the response function
 	public function createResponseFunction( $cb, $errHandler = null ) {
@@ -197,6 +196,7 @@ class API extends APIRouteConfiguration {
     protected function sendOutput( $output ) {
 		header( 'ContentType: application/json' );
 		echo json_encode( $output );
+		exit;
 	}
 	/**
 	 * Convert a method name to a path
