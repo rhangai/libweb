@@ -5,7 +5,14 @@ class Config {
 	private static $config = array();
 
 	public static function feedJSON( $file ) {
-		self::$config = self::mergeConfig( self::$config, json_decode( $file, true ) );
+		$contents = @file_get_contents( $file );
+		if ( $contents === false )
+			throw new \Exception( "Invalid file '".$file."'" );
+		$obj = json_decode( $contents, true );
+		$err = json_last_error();
+		if ( $err )
+			throw new \Exception( "Could not decode file '".$file."'" );
+		self::feed( $obj );
 	}
 	public static function feed( $obj ) {
 		self::$config = self::mergeConfig( self::$config, $obj );
