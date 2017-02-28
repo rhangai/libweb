@@ -14,7 +14,7 @@ class APIRouteConfiguration {
 	public function __construct( $api, $router, $root ) {
 		$this->api    = $api;
 		$this->router = $router;
-		$this->root   = $this->normalizePath( $root, false );
+		$this->root   = $this->normalizePath( $root );
 	}
 	/// Get the router
 	public function getRouter() {
@@ -24,7 +24,7 @@ class APIRouteConfiguration {
 	private function addRoute( $methods, $path, $handler ) {
 		$this->router->respond(
 		    $methods,
-			$this->normalizePath( $path ),
+			$this->joinPath( $this->root, $path ),
 			$handler
 		);
 	}
@@ -41,7 +41,7 @@ class APIRouteConfiguration {
 		$this->addRoute( array( "GET", "POST" ), $path, $handler );
 	}
 	// Register the object
-	public function registerObject( $obj, $root = null ) {
+	public function registerObject( $obj, $base = null ) {
 		$methods    = get_class_methods( get_class( $obj ) );
 		$errHandler = null;
 		if ( method_exists( $obj, 'handleException' ) )
@@ -83,7 +83,7 @@ class APIRouteConfiguration {
                 }
 				$this->addRoute(
 				    $respondMethods,
-					$path,
+					$this->joinPath( $base, $path ),
 					$handler
 				);
 			}
@@ -92,10 +92,9 @@ class APIRouteConfiguration {
 	/**
 	 * Normalize the path
 	 */
-    public function normalizePath( $path, $useRoot = true ) {
-		if ( $useRoot )
-			$path = $this->root.'/'.$path;
-		
+    public function normalizePath( $path ) {
+		if ( !$path )
+			return '/';
 		if ( $path[0] !== '/' )
 			$path = '/'.$path;
 		if ( $path[strlen($path)-1] === '/' )
@@ -105,6 +104,17 @@ class APIRouteConfiguration {
 		$path = preg_replace( '/\\/\\/+/', '/', $path );
 		
 		return $path;
+	}
+	/**
+	 * Join and normalize path
+	 */
+    public function joinPath( $path1, $path2 ) {
+		if ( !$path1 )
+			return $this->normalizePath( $path2 );
+		else if ( !$path2 )
+			return $this->normalizePath( $path1 );
+		$path = $path1.'/'.$path2;
+		return $this->normalizePath( $path );
 	}
 	
 };
