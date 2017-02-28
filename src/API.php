@@ -29,15 +29,18 @@ class APIRouteConfiguration {
 		);
 	}
 	/// Register a GET method
-	public function GET( $path, $handler ) {
+	public function GET( $path, $handler, $errHandler = null ) {
+		$handler = $this->api->createResponseFunction( $handler, $errHandler );
 		$this->addRoute( "GET", $path, $handler );
 	}
 	/// Register a POST method
-	public function POST( $path, $handler ) {
+	public function POST( $path, $handler, $errHandler = null ) {
+		$handler = $this->api->createResponseFunction( $handler, $errHandler );
 		$this->addRoute( "GET", $path, $handler );
 	}
 	/// Register a POST and GET methods
-	public function REQUEST( $path, $handler ) {
+	public function REQUEST( $path, $handler, $errHandler = null ) {
+		$handler = $this->api->createResponseFunction( $handler, $errHandler );
 		$this->addRoute( array( "GET", "POST" ), $path, $handler );
 	}
 	// Register the object
@@ -60,15 +63,15 @@ class APIRouteConfiguration {
 
 			if ( preg_match('/^GET_(\w+)$/', $methodName, $matches ) ) {
 				$name = $matches[1];
-				$path = $api->nameToPath( $name );
+				$path = $this->api->nameToPath( $name );
 				$respondMethods = 'GET';
 			} else if ( preg_match('/^POST_(\w+)$/', $methodName, $matches ) ) {
 				$name = $matches[1];
-				$path = $api->nameToPath( $name );
+				$path = $this->api->nameToPath( $name );
 				$respondMethods = 'POST';
 			} else if ( preg_match('/^REQUEST_(\w+)$/', $methodName, $matches ) ) {
 				$name = $matches[1];
-				$path = $api->nameToPath( $name );
+				$path = $this->api->nameToPath( $name );
 				$respondMethods = array( 'POST', 'GET' );
 			}
 			if ( $path ) {
@@ -79,7 +82,7 @@ class APIRouteConfiguration {
 						exit;
 					};
 				} else {
-					$handler = $api->createResponseFunction( array( $obj, $method ), $errHandler );
+					$handler = $this->api->createResponseFunction( array( $obj, $method ), $errHandler );
                 }
 				$this->addRoute(
 				    $respondMethods,
