@@ -92,6 +92,70 @@ class APIRouteConfiguration {
 			}
 		}
 	}
+	// Default load function
+	public static function defaultLoadFunction( $api, $file ) {
+		require_once $file->path;
+		$klass = $file->base . "API";
+		$obj   = new $klass;
+		return $obj;
+	}
+	// Register a dir
+	public function registerDir( $root, $options = array() ) {
+		$paths    = @$options["paths"];
+		if ( !$paths )
+			$paths = array();
+		if ( !is_array( $paths ) )
+			$paths = array( $paths );
+
+
+		$base = @$options["base"];
+		if ( !$base )
+			$base = "";
+
+		$curdir   = $root;
+		$pathbase = '/';
+		if ( count($paths) > 0 ) {
+			$pathbase = implode( "/", $paths ) . "/";
+			$curdir   = $curdir.$pathbase;
+		}
+		$curdir = $this->normalizePath( $curdir );
+
+		$loadFunction = @$options["load"];
+		if ( !$loadFunction ) {
+			$loadFunction    = array( get_class(), 'defaultLoadFunction' );
+			$options["load"] = $loadFunction;
+		}
+		
+		$files = scandir( $curdir );
+		foreach ( $files as $file ) {
+			if ( ( $file === '.' ) || ( $file === '..' ) || ( $file[0] === '_' ) )
+				continue;
+
+			$filepath = $this->normalizePath( $curdir . '/'. $file );
+			if ( is_dir( $filepath ) ) {
+				$newpaths   = $paths;
+				$newpaths[] = $file;
+				$newoptions = $options;
+				$newoptions["paths"] = $newpaths;
+				$this->registerDir( $root, $newoptions );
+				continue;
+			}
+
+			$fileext   = pathinfo($filepath, PATHINFO_EXTENSION);
+			if ( $fileext !== 'php' )
+				continue;
+			$filebase  = pathinfo($filepath, PATHINFO_FILENAME);
+
+
+			$obj = call_user_func( $loadFunction, $this, (object) array(
+				"path"    => $filepath,
+				"base"    => $filebase,
+				"ext"     => $fileext,
+				"options" => $options,
+			));
+		    $this->registerObject( $obj, $base . '/' . $pathbase . strtolower( $filebase ) );
+		}
+	}
 	/**
 	 * Normalize the path
 	 */
