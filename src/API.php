@@ -239,7 +239,7 @@ class API extends APIRouteConfiguration {
 		try {
 			$data = call_user_func_array( $cb, $args );
 		    $this->sendOutput( array( "status" => "success", "data" => $data ) );
-		} catch( Exception $e ) {
+		} catch( \Exception $e ) {
 			http_response_code( 500 );
 			error_log( $e );
 			$data = null;
