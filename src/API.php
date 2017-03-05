@@ -238,15 +238,21 @@ class API extends APIRouteConfiguration {
 	public function response( $cb, $args = array(), $errHandler = null ) {
 		try {
 			$data = call_user_func_array( $cb, $args );
+			if ( is_object($data) && method_exists( $data, 'serializeAPI' ) )
+				$data = $data->serializeAPI();
 		    $this->sendOutput( array( "status" => "success", "data" => $data ) );
 		} catch( \Exception $e ) {
 			http_response_code( 500 );
 			error_log( $e );
 			$data = null;
-			if ( $errHandler )
+			if ( $errHandler ) {
 				$data = call_user_func( $errHandler, $e );
-
-			$this->sendOutput( array( "status" => "error", "error" => $data ) );
+				if ( is_object($data) && method_exists( $data, 'serializeAPI' ) )
+					$data = $data->serializeAPI();
+			} else if ( is_object( $e ) && method_exists( $e, 'serializeAPI' ) ) {
+				$data = $e->serializeAPI();
+			}
+		    $this->sendOutput( array( "status" => "error", "error" => $data ) );
 		}
 	}
 	// Wrap the response function
