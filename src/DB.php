@@ -139,7 +139,7 @@ class DB {
 	// Call safe
     private function callSafe( &$err, $method, $args ) {
 		try {
-			return call_user_func_array( array( $this, $methods ), $args );
+			return call_user_func_array( array( $this, $method ), $args );
 		} catch ( PDOException $e ) {
 			$err = $e;
 		}
