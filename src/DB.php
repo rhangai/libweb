@@ -17,7 +17,7 @@ class DB {
 		    @$options['url'] ?: Config::get( 'PDO.url' ),
 		    @$options['user'] ?: Config::get( 'PDO.user' ),
 			@$options['password'] ?: Config::get( 'PDO.password' ),
-			array( PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING )
+			array( PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION )
 		);
 	}
 
