@@ -1,13 +1,8 @@
 <?php namespace LibWeb;
 
 use \PDO;
+use \PDOException;
 
-class DBException extends \Exception {
-
-	public function __construct( $code, $info ) {
-		parent::__construct( $info );
-	}
-};
 class DB {
 	
 	private $db;
@@ -40,6 +35,9 @@ class DB {
 			return $result;
 		}
 	}
+	public function fetchOneSafe( &$err, $query, $data = null, $fetchMode = PDO::FETCH_OBJ ) {
+		return $this->callSafe( $err, 'fetchOne', array( $query, $data, $fetchMode ) );
+	}
 
 	public function fetchAll( $query, $data = null, $fetchMode = PDO::FETCH_OBJ ) {
 		$db   = $this->db;
@@ -52,6 +50,9 @@ class DB {
 			return $stmt->fetchAll( $fetchMode );
 		}
 	}
+	public function fetchAllSafe( &$err, $query, $data = null, $fetchMode = PDO::FETCH_OBJ ) {
+		return $this->callSafe( $err, 'fetchAll', array( $query, $data, $fetchMode ) );
+	}
 
 	public function execute( $query, $data = null ) {
 		$db   = $this->db;
@@ -62,6 +63,9 @@ class DB {
 		    $db->execute( $query );
 		}
 		return $db->lastInsertId();
+	}
+	public function executeSafe( &$err, $query, $data = null ) {
+		return $this->callSafe( $err, 'execute', array( $query, $data ) );
 	}
 
 	public function executeArray( $query, $data, $map = null, $cb = null ) {
@@ -76,6 +80,10 @@ class DB {
 				call_user_func( $cb, $db->lastInsertId() );
 		}
 	}
+	public function executeArraySafe( &$err, $query, $data, $map = null, $cb = null ) {
+		return $this->callSafe( $err, 'executeArray', array( $query, $data, $map, $cb ) );
+	}
+
 
 	public function transaction( $cb ) {
 		$db = $this->db;
@@ -89,8 +97,10 @@ class DB {
 		}
 		return $ret;
 	}
-
-
+    public function transactionSafe( &$err, $cb ) {
+		return $this->callSafe( $err, 'transaction', array( $cb ) );
+	}
+	
 	public function writeFileStream( $stream, $nome = "", $tipo = "", $info = "" ) {
 		$db   = $this->db;
 		$stmt = $db->prepare( "INSERT INTO File (Nome,Tipo,Info,Criado,Dados) VALUES (?,?,?,NOW(),?)" );
@@ -125,16 +135,12 @@ class DB {
 		}
 		return $stream;
 	}
-
-	public static function throwErrorFrom( $obj ) {
-		throw new DBException( json_encode( array( "info" => $obj->errorInfo(), "code" => $obj->errorCode() ) ) );
-	}
-
-	// Make safe
-    private function makeSafe( &$err, $method, $args ) {
+	
+	// Call safe
+    private function callSafe( &$err, $method, $args ) {
 		try {
 			return call_user_func_array( array( $this, $methods ), $args );
-		} catch ( DBException $e ) {
+		} catch ( PDOException $e ) {
 			$err = $e;
 		}
 		return null;
