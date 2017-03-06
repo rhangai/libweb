@@ -21,37 +21,37 @@ class DB {
 		);
 	}
 
-	public function fetchOne( $query, $data = null, $fetchMode = PDO::FETCH_OBJ ) {
+	public function fetchOne( $query, $data = null, $fetchMode = PDO::FETCH_OBJ, $fetchArg = null ) {
 		if ( $data != null ) {
 			$stmt = $this->db->prepare( $query );
 		    $stmt->execute( $data );
-			$result = $stmt->fetch( $fetchMode );
+			$result = $stmt->fetch( $fetchMode, $fetchArg );
 			$stmt->closeCursor();
 			return $result;
 		} else {
 			$stmt   = $this->db->query( $query );
-			$result = $stmt->fetch( $fetchMode );
+			$result = $stmt->fetch( $fetchMode, $fetchArg );
 			$stmt->closeCursor();
 			return $result;
 		}
 	}
-	public function fetchOneSafe( &$err, $query, $data = null, $fetchMode = PDO::FETCH_OBJ ) {
-		return $this->callSafe( $err, 'fetchOne', array( $query, $data, $fetchMode ) );
+	public function fetchOneSafe( &$err, $query, $data = null, $fetchMode = PDO::FETCH_OBJ, $fetchArg = null ) {
+		return $this->callSafe( $err, 'fetchOne', array( $query, $data, $fetchMode, $fetchArg ) );
 	}
 
-	public function fetchAll( $query, $data = null, $fetchMode = PDO::FETCH_OBJ ) {
+	public function fetchAll( $query, $data = null, $fetchMode = PDO::FETCH_OBJ, $fetchArg = null ) {
 		$db   = $this->db;
 		if ( $data != null ) {
 			$stmt   = $db->prepare( $query );
 		    $stmt->execute( $data );
-		    return $stmt->fetchAll( $fetchMode );
+		    return $stmt->fetchAll( $fetchMode, $fetchArg );
 		} else {
 			$stmt = $db->query( $query );
-			return $stmt->fetchAll( $fetchMode );
+			return $stmt->fetchAll( $fetchMode, $fetchArg );
 		}
 	}
-	public function fetchAllSafe( &$err, $query, $data = null, $fetchMode = PDO::FETCH_OBJ ) {
-		return $this->callSafe( $err, 'fetchAll', array( $query, $data, $fetchMode ) );
+	public function fetchAllSafe( &$err, $query, $data = null, $fetchMode = PDO::FETCH_OBJ, $fetchArg = null ) {
+		return $this->callSafe( $err, 'fetchAll', array( $query, $data, $fetchMode, $fetchArg ) );
 	}
 
 	public function execute( $query, $data = null ) {
