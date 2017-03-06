@@ -57,7 +57,7 @@ class DB {
 	public function execute( $query, $data = null ) {
 		$db   = $this->db;
 		if ( $data != null ) {
-		    $db->prepare( $query );
+		    $stmt = $db->prepare( $query );
 		    $stmt->execute( $data );
 		} else {
 		    $db->execute( $query );
