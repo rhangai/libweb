@@ -2,7 +2,12 @@
 
 use \PDO;
 
-class DBException extends \Exception {};
+class DBException extends \Exception {
+
+	public function __construct( $code, $info ) {
+		parent::__construct( $info );
+	}
+};
 class DB {
 	
 	private $db;
@@ -16,25 +21,20 @@ class DB {
 		return new PDO(
 		    @$options['url'] ?: Config::get( 'PDO.url' ),
 		    @$options['user'] ?: Config::get( 'PDO.user' ),
-			@$options['password'] ?: Config::get( 'PDO.password' )
+			@$options['password'] ?: Config::get( 'PDO.password' ),
+			array( PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING )
 		);
 	}
 
 	public function fetchOne( $query, $data = null, $fetchMode = PDO::FETCH_OBJ ) {
 		if ( $data != null ) {
-			$stmt   = $this->db->prepare( $query );
-			if ( !$stmt )
-				self::throwErrorFrom( $this->db );			
-			$result = $stmt->execute( $data );
-			if ( !$result )
-				self::throwErrorFrom( $stmt );
+			$stmt = $this->db->prepare( $query );
+		    $stmt->execute( $data );
 			$result = $stmt->fetch( $fetchMode );
 			$stmt->closeCursor();
 			return $result;
 		} else {
-			$stmt = $this->db->query( $query );
-			if ( !$stmt )
-			    self::throwErrorFrom( $this->db );
+			$stmt   = $this->db->query( $query );
 			$result = $stmt->fetch( $fetchMode );
 			$stmt->closeCursor();
 			return $result;
@@ -45,35 +45,21 @@ class DB {
 		$db   = $this->db;
 		if ( $data != null ) {
 			$stmt   = $db->prepare( $query );
-			if ( !$stmt )
-				self::throwErrorFrom( $this->db );			
-			$result = $stmt->execute( $data );
-			if ( !$result )
-				self::throwErrorFrom( $stmt );
-			$result = $stmt->fetchAll( $fetchMode );
-			return $result;
+		    $stmt->execute( $data );
+		    return $stmt->fetchAll( $fetchMode );
 		} else {
 			$stmt = $db->query( $query );
-			if ( !$stmt )
-				self::throwErrorFrom( $this->db );			
-			$result = $stmt->fetchAll( $fetchMode );
-			return $result;
+			return $stmt->fetchAll( $fetchMode );
 		}
 	}
 
 	public function execute( $query, $data = null ) {
 		$db   = $this->db;
 		if ( $data != null ) {
-			$stmt   = $db->prepare( $query );
-			if ( !$stmt )
-				self::throwErrorFrom( $this->db );			
-			$result = $stmt->execute( $data );
-			if ( !$result )
-				self::throwErrorFrom( $stmt );
+		    $db->prepare( $query );
+		    $stmt->execute( $data );
 		} else {
-			$result = $db->execute( $query );
-			if ( !$result )
-				self::throwErrorFrom( $db );
+		    $db->execute( $query );
 		}
 		return $db->lastInsertId();
 	}
@@ -81,15 +67,13 @@ class DB {
 	public function executeArray( $query, $data, $map = null, $cb = null ) {
 		$db     = $this->db;
 		$stmt   = $db->prepare( $query );
-
+		
 		foreach( $data as $item ) {
 			if ( $map )
 				$item = call_user_func( $map, $item );
-			$result = $stmt->execute( $item );
-			if ( !$result )
-				self::throwErrorFrom( $stmt );
+		    $stmt->execute( $item );
 			if ( $cb )
-				call_user_func( $cb, $db->lastInsertId );
+				call_user_func( $cb, $db->lastInsertId() );
 		}
 	}
 
@@ -99,7 +83,7 @@ class DB {
 		try {
 			$ret = call_user_func( $cb, $db );
 			$db->commit();
-		} catch( Exception $e ) {
+		} catch( \Exception $e ) {
 			$db->rollback();
 			throw $e;
 		}
@@ -144,6 +128,16 @@ class DB {
 
 	public static function throwErrorFrom( $obj ) {
 		throw new DBException( json_encode( array( "info" => $obj->errorInfo(), "code" => $obj->errorCode() ) ) );
+	}
+
+	// Make safe
+    private function makeSafe( &$err, $method, $args ) {
+		try {
+			return call_user_func_array( array( $this, $methods ), $args );
+		} catch ( DBException $e ) {
+			$err = $e;
+		}
+		return null;
 	}
 
 	// Instance
