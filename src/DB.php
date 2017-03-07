@@ -25,12 +25,12 @@ class DB {
 		if ( $data != null ) {
 			$stmt = $this->db->prepare( $query );
 		    $stmt->execute( $data );
-			$result = $stmt->fetch( $fetchMode, $fetchArg );
+			$result = $fetchArg != null ? $stmt->fetch( $fetchMode, $fetchArg ) : $stmt->fetch( $fetchMode );
 			$stmt->closeCursor();
 			return $result;
 		} else {
 			$stmt   = $this->db->query( $query );
-			$result = $stmt->fetch( $fetchMode, $fetchArg );
+			$result = $fetchArg != null ? $stmt->fetch( $fetchMode, $fetchArg ) : $stmt->fetch( $fetchMode );
 			$stmt->closeCursor();
 			return $result;
 		}
@@ -44,10 +44,10 @@ class DB {
 		if ( $data != null ) {
 			$stmt   = $db->prepare( $query );
 		    $stmt->execute( $data );
-		    return $stmt->fetchAll( $fetchMode, $fetchArg );
+			return ( $fetchArg != null ) ? $stmt->fetchAll( $fetchMode, $fetchArg ) : $stmt->fetchAll( $fetchMode );
 		} else {
 			$stmt = $db->query( $query );
-			return $stmt->fetchAll( $fetchMode, $fetchArg );
+			return ( $fetchArg != null ) ? $stmt->fetchAll( $fetchMode, $fetchArg ) : $stmt->fetchAll( $fetchMode );
 		}
 	}
 	public function fetchAllSafe( &$err, $query, $data = null, $fetchMode = PDO::FETCH_OBJ, $fetchArg = null ) {
