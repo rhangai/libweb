@@ -60,7 +60,7 @@ class DB {
 		    $stmt = $db->prepare( $query );
 		    $stmt->execute( $data );
 		} else {
-		    $db->execute( $query );
+		    $db->query( $query );
 		}
 		return $db->lastInsertId();
 	}
