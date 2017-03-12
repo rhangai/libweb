@@ -53,7 +53,10 @@ class DB {
 	public function fetchAllSafe( &$err, $query, $data = null, $fetchMode = PDO::FETCH_OBJ, $fetchArg = null ) {
 		return $this->callSafe( $err, 'fetchAll', array( $query, $data, $fetchMode, $fetchArg ) );
 	}
-
+	
+	/**
+	 * Execute a query
+	 */
 	public function execute( $query, $data = null ) {
 		$db   = $this->db;
 		if ( $data != null ) {
@@ -67,7 +70,29 @@ class DB {
 	public function executeSafe( &$err, $query, $data = null ) {
 		return $this->callSafe( $err, 'execute', array( $query, $data ) );
 	}
+	
+	/**
+	 * Insert a data on the table
+	 */
+	public function insertInto( $table, $data ) {
+		$db     = $this->db;
 
+		$table  = $this->quoteIdentifier( $table );
+
+		$fields = '('.implode( ',', array_map( array( $this, 'quoteIdentifier' ), array_keys( $data ) ) ).')';
+		
+		$values = array_values( $data );
+
+	    $query = "INSERT INTO ".$table.$fields." VALUES (". implode(',', array_fill(0, count( $values ), '?')).")";
+		return $this->execute( $query, $values );
+	}
+	public function insertIntoSafe( &$err, $table, $data ) {
+		return $this->callSafe( $err, 'insertInto', array( $table, $data ) );
+	}
+
+	/**
+	 * Execute a query multiple times
+	 */
 	public function executeArray( $query, $data, $map = null, $cb = null ) {
 		$db     = $this->db;
 		$stmt   = $db->prepare( $query );
@@ -144,6 +169,11 @@ class DB {
 			$err = $e;
 		}
 		return null;
+	}
+
+	// Quote identifier
+    public function quoteIdentifier( $identifier ) {
+		return "`".str_replace( "`", "``", $identifier )."`";
 	}
 
 	// Instance
