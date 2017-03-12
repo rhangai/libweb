@@ -76,13 +76,9 @@ class DB {
 	 */
 	public function insertInto( $table, $data ) {
 		$db     = $this->db;
-
 		$table  = $this->quoteIdentifier( $table );
-
 		$fields = '('.implode( ',', array_map( array( $this, 'quoteIdentifier' ), array_keys( $data ) ) ).')';
-		
 		$values = array_values( $data );
-
 	    $query = "INSERT INTO ".$table.$fields." VALUES (". implode(',', array_fill(0, count( $values ), '?')).")";
 		return $this->execute( $query, $values );
 	}
