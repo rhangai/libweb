@@ -199,8 +199,10 @@ class Validator {
 			else
 				$validated[ $key ] = $state->value;
 		}
-		if ( $errors )
-			throw new ValidatorException( $errors );
+		if ( $errors ) {
+			$errorState = array( "value" => (object) $obj, "errors" => $errors );
+			throw new ValidatorException( $errorState, array_keys( $errors ) );
+		}
 		return (object) $validated;
 	}
 
