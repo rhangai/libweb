@@ -17,6 +17,7 @@ class ValidatorRules {
 		'strval'   => array( '\LibWeb\ValidatorRules', 'strval' ),
 		'intval'   => array( '\LibWeb\ValidatorRules', 'intval' ),
 		'floatval' => array( '\LibWeb\ValidatorRules', 'floatval' ),
+		'date'     => array( '\LibWeb\ValidatorRules', 'date' ),
 		'email'    => array( '\LibWeb\ValidatorRules', 'email' ),
 		'optional' => array( '\LibWeb\ValidatorRules', 'optional' ),
 	);
@@ -71,6 +72,17 @@ class ValidatorRules {
 	/// Get the value as float
 	public static function floatval( $state, $args ) {
 		return self::call( $state, array( 'floatval' ) );
+	}
+	/// Date
+	public static function date( $state, $args ) {
+		$format = $args[0];
+	    $date   = \DateTime::createFromFormat( $format, $state->value );
+		if ( $date === false ) {
+			$state->errors[] = array( 'name' => 'date', 'data' => \DateTime::getLastErrors() );
+			return;
+		}
+		$date->setTime( 0, 0, 0 );
+		$state->value = $date->format('Y-m-d H:i:s');
 	}
 	/// Email
 	public static function email( $state, $args ) {
@@ -190,8 +202,14 @@ class Validator {
 				$rule = Validator::optional( $rule );
 			}
 
+			$skipDefault = false;
+			if ( $key && ($key[0] === "!" ) ) {
+				$key  = substr( $key, 1 );
+				$skipDefault = true;
+			}
+
 			$state = ValidatorChain::createState( @$assoc[ $key ] );
-			if ( $defaultRules && $state->value )
+			if ( !$skipDefault && $defaultRules && $state->value )
 				$state = $defaultRules->validateState( $state );
 			$state = $rule->validateState( $state );
 			if ( $state->errors )
