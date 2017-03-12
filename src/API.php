@@ -235,14 +235,14 @@ class API extends APIRouteConfiguration {
 	/**
 	 * Call a response object and write a response
 	 */
-	public function response( $cb, $args = array(), $errHandler = null ) {
+	public function response( $cb, $errHandler, $req, $res ) {
 		try {
-			$data = call_user_func_array( $cb, $args );
+			$data = call_user_func( $cb, $req, $res );
 			if ( is_object($data) && method_exists( $data, 'serializeAPI' ) )
 				$data = $data->serializeAPI();
-		    $this->sendOutput( array( "status" => "success", "data" => $data ) );
+		    $this->sendOutput( $req, $res, array( "status" => "success", "data" => $data ) );
 		} catch( \Exception $e ) {
-			http_response_code( 500 );
+			$res->code( 400 );
 			error_log( $e );
 			$data = null;
 			if ( $errHandler ) {
@@ -252,24 +252,21 @@ class API extends APIRouteConfiguration {
 			} else if ( is_object( $e ) && method_exists( $e, 'serializeAPI' ) ) {
 				$data = $e->serializeAPI();
 			}
-		    $this->sendOutput( array( "status" => "error", "error" => $data ) );
+		    $this->sendOutput( $req, $res, array( "status" => "error", "error" => $data ) );
 		}
 	}
 	// Wrap the response function
 	public function createResponseFunction( $cb, $errHandler = null ) {
-		$fn = function() use ($cb, $errHandler) {
-			$args = func_get_args();
-			$this->response( $cb, $args, $errHandler );
+		$fn = function( $req, $res ) use ($cb, $errHandler) {
+			$this->response( $cb, $errHandler, $req, $res );
 		};
 		return $fn;
 	}
 	/**
 	 * Send the output
 	 */
-    protected function sendOutput( $output ) {
-		header( 'ContentType: application/json' );
-		echo json_encode( $output );
-		exit;
+    protected function sendOutput( $req, $res, $output ) {
+		$res->json( $output );
 	}
 	/**
 	 * Convert a method name to a path
