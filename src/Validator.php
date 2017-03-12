@@ -17,6 +17,7 @@ class ValidatorRules {
 		'strval'   => array( '\LibWeb\ValidatorRules', 'strval' ),
 		'intval'   => array( '\LibWeb\ValidatorRules', 'intval' ),
 		'floatval' => array( '\LibWeb\ValidatorRules', 'floatval' ),
+		'length'   => array( '\LibWeb\ValidatorRules', 'length' ),
 		'date'     => array( '\LibWeb\ValidatorRules', 'date' ),
 		'email'    => array( '\LibWeb\ValidatorRules', 'email' ),
 		'optional' => array( '\LibWeb\ValidatorRules', 'optional' ),
@@ -72,6 +73,29 @@ class ValidatorRules {
 	/// Get the value as float
 	public static function floatval( $state, $args ) {
 		return self::call( $state, array( 'floatval' ) );
+	}
+	/// Length
+	public static function length( $state, $args ) {
+		$options = $args[0];
+		if ( is_int( $options ) ) {
+			if ( is_int( @$args[1] ) )
+				$options = array( "min" => $options, "max" => $args[1] );
+			else
+				$options = array( "min" => $options );
+		}
+		if ( !is_array($options) )
+			throw new \Exception( "Invalid options for length" );
+
+		$len = strlen( $state->value );
+		$min = @$options["min"];
+		$max = @$options["max"];
+		if ( ($min != null) && ( $len < $min ) ) {
+			$state->errors[] = array( "name" => "length", "data" => array( "options" => $options, "value" => $state->value ) );
+			return;
+		} else if ( ($max != null) && ( $len > $max ) ) {
+			$state->errors[] = array( "name" => "length", "data" => array( "options" => $options, "value" => $state->value ) );
+			return;
+		}
 	}
 	/// Date
 	public static function date( $state, $args ) {
