@@ -151,6 +151,7 @@ class APIRouteConfiguration {
 				"path"    => $filepath,
 				"base"    => $filebase,
 				"ext"     => $fileext,
+				"paths"   => $paths,
 				"options" => $options,
 			));
 		    $this->registerObject( $obj, $base . '/' . $pathbase . strtolower( $filebase ) );
