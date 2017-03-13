@@ -122,7 +122,7 @@ class APIRouteConfiguration {
 
 		$loadFunction = @$options["load"];
 		if ( !$loadFunction ) {
-			$loadFunction    = array( get_class(), 'defaultLoadFunction' );
+			$loadFunction    = array( get_class($this), 'defaultLoadFunction' );
 			$options["load"] = $loadFunction;
 		}
 		
