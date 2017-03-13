@@ -20,7 +20,6 @@ class ValidatorRules {
 		'length'   => array( '\LibWeb\ValidatorRules', 'length' ),
 		'date'     => array( '\LibWeb\ValidatorRules', 'date' ),
 		'email'    => array( '\LibWeb\ValidatorRules', 'email' ),
-		'optional' => array( '\LibWeb\ValidatorRules', 'optional' ),
 	);
 
 	/// Get the initial value
@@ -117,22 +116,17 @@ class ValidatorRules {
 		};
 		$state->value = $email;
 	}
-	
-	public static function optional( $state, $args ) {
-		$rule = $args[0];
-		if ( !$state->value )
-			return;
-		$rule->validateState( $state );
-	}
 };
 
 /// A chain of rules 
 class ValidatorChain {
 
 	private $rules;
+	public  $flags;
 	
-	public function __construct( $rules = array() ) {
+	public function __construct( $rules = array(), $flags = 0 ) {
 		$this->rules = $rules;
+		$this->flags = $flags;
 	}
 	/// Add a new rule to this chain
 	public function __call( $name, $args ) {
@@ -173,12 +167,21 @@ class ValidatorChain {
 		$cb = ValidatorRules::$rules[ $rule->name ];
 		call_user_func( $cb, $state, $rule->args );
 	}
+	/// Optional
+	public function optional() {
+		return new ValidatorChain( $this->rules, $this->flags | Validator::FLAG_OPTIONAL );
+	}
+	/// Non optional
+	public function exists() {
+		return new ValidatorChain( $this->rules, $this->flags & (~Validator::FLAG_OPTIONAL) );
+	}
 };
 
 /**
  * Validator class
  */
 class Validator {
+	const FLAG_OPTIONAL = 0x01;
 	private static $defaultValidationRulesCache = null;
 	/**
 	 * Register a new rule
@@ -223,7 +226,7 @@ class Validator {
 		foreach ( $rules as $key => $rule ) {
 			if ( $key && ($key[strlen($key)-1] === "?" ) ) {
 				$key  = substr( $key, 0, -1 );
-				$rule = Validator::optional( $rule );
+				$rule = $rule->optional();
 			}
 
 			$skipDefault = false;
@@ -235,7 +238,14 @@ class Validator {
 			$state = ValidatorChain::createState( @$assoc[ $key ] );
 			if ( !$skipDefault && $defaultRules && $state->value )
 				$state = $defaultRules->validateState( $state );
-			$state = $rule->validateState( $state );
+
+			if ( !$state->value ) {
+				if ( $rule->flags & self::FLAG_OPTIONAL )
+					continue;
+				$state->errors[] = array( "name" => "exists" );
+			} else {
+				$state = $rule->validateState( $state );
+			}
 			if ( $state->errors )
 				$errors[ $key ] = $state->errors;
 			else
