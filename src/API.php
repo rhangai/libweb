@@ -187,6 +187,24 @@ class APIRouteConfiguration {
 	
 };
 
+// API request
+class APIRequest extends \Klein\Request {
+	private $paramsCache = null;
+	public function paramsRequest() {
+		if ( $this->paramsCache == null ) {
+			$this->paramsCache = array_merge(
+				$this->params_get->all( null, false ),
+				$this->params_post->all( null, false )
+			);
+		}
+		return $this->paramsCache;
+	}
+	public function param( $key, $default = null ) {
+		$params = $this->paramsRequest();
+		return isset($params[$key]) ? $params[$key] : $default;
+	}
+};
+
 /**
  * API class
  *
@@ -203,7 +221,7 @@ class API extends APIRouteConfiguration {
 	 * Dispatch the current route calling the registered ones
 	 */
 	public function dispatch( $options = null ) {
-		$req = \Klein\Request::createFromGlobals();
+		$req = APIRequest::createFromGlobals();
 
 		// Options
 		if ( $options ) {
