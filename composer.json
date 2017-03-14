@@ -1,7 +1,7 @@
 {
 	"name": "renanhangai/libweb",
 	"description": "Some PHP utility classes",
-	"version": "0.8.3",
+	"version": "0.8.4",
 	"type": "library",
 	"require": {
 		"klein/klein": "^2.1"
