@@ -11,6 +11,8 @@ class DB {
 	public function __construct( $options = array() ) {
 		$this->db = $this->createConnection( $options );
 	}
+
+	public function getPDO() { return $this->db; }
 	
 	protected function createConnection( $options ) {
 		return new PDO(
