@@ -190,6 +190,9 @@ class APIRouteConfiguration {
 // API request
 class APIRequest extends \Klein\Request {
 	private $paramsCache = null;
+	public function refreshCache() {
+		$this->paramsCache = null;
+	}
 	public function paramsRequest() {
 		if ( $this->paramsCache == null ) {
 			$this->paramsCache = array_merge(
@@ -249,6 +252,7 @@ class API extends APIRouteConfiguration {
 					$req->paramsPost()->set( $key, $value );
 			}
 		}
+		$req->refreshCache();
 		$this->getRouter()->dispatch( $req );
 	}
 	/**
