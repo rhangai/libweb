@@ -2,7 +2,7 @@
 
 class MockAPI extends LibWeb\API {
 	private $output;
-	protected function sendOutput( $output ) {
+	protected function sendOutput( $req, $res, $output ) {
 		$this->output = $output;
 	}
 	public function getOutput() { return $this->output; }
