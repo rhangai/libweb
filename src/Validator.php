@@ -6,20 +6,25 @@
 class ValidatorRules {
 	
 	public static $rules = array(
-		'initial'  => array( '\LibWeb\ValidatorRules', 'initial' ),
-		'noop'     => array( '\LibWeb\ValidatorRules', 'noop' ),
-		'store'    => array( '\LibWeb\ValidatorRules', 'store' ),
-		'restore'  => array( '\LibWeb\ValidatorRules', 'restore' ),
-		'call'     => array( '\LibWeb\ValidatorRules', 'call' ),
-		'trim'     => array( '\LibWeb\ValidatorRules', 'trim' ),
-		'ltrim'    => array( '\LibWeb\ValidatorRules', 'ltrim' ),
-		'rtrim'    => array( '\LibWeb\ValidatorRules', 'rtrim' ),
-		'strval'   => array( '\LibWeb\ValidatorRules', 'strval' ),
-		'intval'   => array( '\LibWeb\ValidatorRules', 'intval' ),
-		'floatval' => array( '\LibWeb\ValidatorRules', 'floatval' ),
-		'length'   => array( '\LibWeb\ValidatorRules', 'length' ),
-		'date'     => array( '\LibWeb\ValidatorRules', 'date' ),
-		'email'    => array( '\LibWeb\ValidatorRules', 'email' ),
+		'initial'      => array( '\LibWeb\ValidatorRules', 'initial' ),
+		'noop'         => array( '\LibWeb\ValidatorRules', 'noop' ),
+		'store'        => array( '\LibWeb\ValidatorRules', 'store' ),
+		'restore'      => array( '\LibWeb\ValidatorRules', 'restore' ),
+		'call'         => array( '\LibWeb\ValidatorRules', 'call' ),
+		'trim'         => array( '\LibWeb\ValidatorRules', 'trim' ),
+		'ltrim'        => array( '\LibWeb\ValidatorRules', 'ltrim' ),
+		'rtrim'        => array( '\LibWeb\ValidatorRules', 'rtrim' ),
+		'strval'       => array( '\LibWeb\ValidatorRules', 'strval' ),
+		'intval'       => array( '\LibWeb\ValidatorRules', 'intval' ),
+		'floatval'     => array( '\LibWeb\ValidatorRules', 'floatval' ),
+		'str_replace'  => array( '\LibWeb\ValidatorRules', 'str_replace' ),
+		'preg_replace' => array( '\LibWeb\ValidatorRules', 'preg_replace' ),
+		'substr'       => array( '\LibWeb\ValidatorRules', 'substr' ),
+		'is_int'       => array( '\LibWeb\ValidatorRules', 'is_int' ),
+		'is_numeric'   => array( '\LibWeb\ValidatorRules', 'is_numeric' ),
+		'length'       => array( '\LibWeb\ValidatorRules', 'length' ),
+		'date'         => array( '\LibWeb\ValidatorRules', 'date' ),
+		'email'        => array( '\LibWeb\ValidatorRules', 'email' ),
 	);
 
 	/// Get the initial value
@@ -72,6 +77,73 @@ class ValidatorRules {
 	/// Get the value as float
 	public static function floatval( $state, $args ) {
 		return self::call( $state, array( 'floatval' ) );
+	}
+	/// String replace a value
+	public static function str_replace( $state, $args ) {
+		$state->value = str_replace( @$args[0], @$args[1], $state->value );
+	}
+	/// Regex replace a value
+	public static function preg_replace( $state, $args ) {
+		$state->value = preg_replace( @$args[0], @$args[1], $state->value );
+	}
+	/// Replace a substr
+	public static function substr( $state, $args ) {
+		if ( count($args) === 1 )
+			$state->value = substr( $state->value, $args[0] );
+		else if ( count($args) === 2 )
+			$state->value = substr( $state->value, $args[0], $args[1] );
+		else
+			throw new \InvalidArgumentException( "Invalid arguments for substr validation" );
+	}
+	/// Check if a given value is an int or a string representation of a digit
+	public static function is_int( $state, $args ) {
+		$error = false;
+		if ( is_int( $state->value ) ) {
+			$state->value = strval( $state->value );
+		} else if ( is_string( $state->value ) ) {
+			if ( !ctype_digit( $state->value ) )
+				$error = true;
+		} else {
+			$error = true;
+		}
+		if ( $error )
+			$state->errors[] = array( "name" => "is_int" );
+	}
+	/// Check if a given value is a numeric decimal number
+	public static function is_numeric( $state, $args ) {
+		$error        = false;
+		$separator    = @$args[0];
+
+		if ( !$separator ) {
+			$separator = $outSeparator = ".";
+		} else if ( strlen($separator) === 1 ) {
+			$outSeparator = $separator;
+		} else if ( strlen($separator) >= 2 ) {
+			$outSeparator = $separator[ 1 ];
+			$separator    = $separator[ 0 ];
+		}
+		if ( is_int( $state->value ) ) {
+			$state->value = strval( $state->value );
+		} else if ( is_string( $state->value ) ) {
+			$parts = explode( $separator, $state->value );
+			if ( count($parts) === 1 )
+				$error = !ctype_digit( $parts[0] );
+			else if ( count($parts) === 2 ) {
+				$error = !ctype_digit( $parts[0] ) || !ctype_digit( $parts[1] );
+				if ( !$error )
+					$state->value = $parts[0] . $outSeparator . $parts[1];
+			} else {
+				$error = true;
+			}
+		} else if ( is_float( $state->value ) ) {
+			$state->value = strval( $state->value );
+			if ( $outSeparator !== "." )
+				$state->value = str_replace( ".", $outSeparator, $state->value );
+		} else {
+			$error = true;
+		}
+		if ( $error )
+			$state->errors[] = array( "name" => "is_numeric" );
 	}
 	/// Length
 	public static function length( $state, $args ) {
