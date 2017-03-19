@@ -247,13 +247,64 @@ class ValidatorChain {
 	public function exists() {
 		return new ValidatorChain( $this->rules, $this->flags & (~Validator::FLAG_OPTIONAL) );
 	}
+	/// Array
+	public function arrayOf( $rule ) {
+		$chain = new ValidatorChain( $this->rules, $this->flags | Validator::FLAG_SKIP_DEFAULT );
+		$chain->rules[] = function( $state ) use ($rule) {
+			$ary = $state->value;
+			if ( !is_array( $ary ) ) {
+				$state->errors[] = array( "name" => "arrayOf", "data" => "Not an array" );
+				return;
+			}
+
+			$ret    = array();
+			$errors = array();
+			foreach ( $ary as $key => $value ) {
+				$state = ValidatorChain::createState( @$assoc[ $key ] );
+				$rule->validateState( $state );
+				if ( $state->errors ) {
+					$errors[ $key ] = $state->errors;
+				} else {
+					$ret[ $key ] = $state->value;
+				}
+			}
+			if ( $errors )
+				$state->errors[] = array( "name" => "arrayOf", "data" => $errors );
+			else
+				$state->value    = $ret;
+		};
+		return $chain;
+	}
+	/// Object
+	public function obj( $rule ) {
+		$chain = new ValidatorChain( $this->rules, $this->flags | Validator::FLAG_SKIP_DEFAULT );
+		$chain->rules[] = function( $state ) use ($rule) {
+			$obj = $state->value;
+			if ( is_array( $obj ) ) {
+				$obj = (object) $obj;
+			} else if ( is_object( $obj ) ) {}
+			else {
+				$state->errors[] = array( "name" => "obj", "data" => "Not an object/array" );
+				return;
+			}
+
+			$err       = null;
+			$validated = Validator::validateObjSafe( $err, $obj, $rule );
+			if ( $err )
+				$state->errors[] = array( "name" => "arrayOf", "data" => $err );
+			else
+				$state->value    = $validated;
+		};
+		return $chain;
+	}
 };
 
 /**
  * Validator class
  */
 class Validator {
-	const FLAG_OPTIONAL = 0x01;
+	const FLAG_OPTIONAL     = 0x01;
+	const FLAG_SKIP_DEFAULT = 0x02;
 	private static $defaultValidationRulesCache = null;
 	/**
 	 * Register a new rule
@@ -287,9 +338,9 @@ class Validator {
 		return $state->value;
 	}
 	/**
-	 * Validate a full object
+	 * Validate a full object using a safe (no throw) parameter
 	 */
-	public static function validateObj( $obj, $rules, $defaultRules = true ) {
+	public static function validateObjSafe( &$err, $obj, $rules, $defaultRules = true ) {
 		if ( $defaultRules === true )
 			$defaultRules = self::defaultValidationRules();
 		$assoc     = (array) $obj;
@@ -324,18 +375,30 @@ class Validator {
 				$validated[ $key ] = $state->value;
 		}
 		if ( $errors ) {
-			$errorState = array( "value" => (object) $obj, "errors" => $errors );
-			throw new ValidatorException( $errorState, array_keys( $errors ) );
+			$err = (object) array( "value" => (object) $obj, "errors" => $errors );
+			return false;
 		}
 		return (object) $validated;
+	}
+
+	/**
+	 * Validate a full object
+	 */
+	public static function validateObj( $obj, $rules, $defaultRules = true ) {
+		$err       = null;
+		$validated = self::validateObjSafe( $err, $obj, $rules, $defaultRules );
+		if ( $err )
+			throw new ValidatorException( $err, array_keys( $err->errors ) );
+		return $validated;
 	}
 
 	
 	/// Create a chain with the given validator
 	public static function __callStatic( $name, $args ) {
 		$chain = new ValidatorChain;
-		$chain->__call( $name, $args );
-		return $chain;
+		if ( is_callable( $chain, $name ) )
+			return call_user_func_array( array( $chain, $name ), $args );
+		return $chain->__call( $name, $args );
 	}
 	
 };
