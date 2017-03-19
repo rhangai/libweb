@@ -357,6 +357,8 @@ class Validator {
 				$key  = substr( $key, 1 );
 				$skipDefault = true;
 			}
+			if ( $rule->flags & self::FLAG_SKIP_DEFAULT )
+				$skipDefault = true;
 
 			$state = ValidatorChain::createState( @$assoc[ $key ] );
 			if ( !$skipDefault && $defaultRules && $state->value )
