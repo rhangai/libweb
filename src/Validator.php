@@ -236,8 +236,12 @@ class ValidatorChain {
 	}
 	// Apply the rule
 	private function _applyRule( $state, $rule ) {
-		$cb = ValidatorRules::$rules[ $rule->name ];
-		call_user_func( $cb, $state, $rule->args );
+		if ( $rule instanceof Closure ) {
+		    call_user_func( $cb, $state );
+		} else {
+			$cb = ValidatorRules::$rules[ $rule->name ];
+			call_user_func( $cb, $state, $rule->args );
+		}
 	}
 	/// Optional
 	public function optional() {
