@@ -236,8 +236,8 @@ class ValidatorChain {
 	}
 	// Apply the rule
 	private function _applyRule( $state, $rule ) {
-		if ( $rule instanceof Closure ) {
-		    call_user_func( $cb, $state );
+		if ( $rule instanceof \Closure ) {
+		    call_user_func( $rule, $state );
 		} else {
 			$cb = ValidatorRules::$rules[ $rule->name ];
 			call_user_func( $cb, $state, $rule->args );
@@ -264,12 +264,12 @@ class ValidatorChain {
 			$ret    = array();
 			$errors = array();
 			foreach ( $ary as $key => $value ) {
-				$state = ValidatorChain::createState( @$assoc[ $key ] );
-				$rule->validateState( $state );
-				if ( $state->errors ) {
-					$errors[ $key ] = $state->errors;
+				$itemState = ValidatorChain::createState( $value );
+				$rule->validateState( $itemState );
+				if ( $itemState->errors ) {
+					$errors[ $key ] = $itemState->errors;
 				} else {
-					$ret[ $key ] = $state->value;
+					$ret[ $key ] = $itemState->value;
 				}
 			}
 			if ( $errors )
@@ -375,6 +375,7 @@ class Validator {
 			} else {
 				$state = $rule->validateState( $state );
 			}
+
 			if ( $state->errors )
 				$errors[ $key ] = $state->errors;
 			else
@@ -402,7 +403,7 @@ class Validator {
 	/// Create a chain with the given validator
 	public static function __callStatic( $name, $args ) {
 		$chain = new ValidatorChain;
-		if ( is_callable( $chain, $name ) )
+		if ( is_callable( array( $chain, $name ) ) )
 			return call_user_func_array( array( $chain, $name ), $args );
 		return $chain->__call( $name, $args );
 	}
