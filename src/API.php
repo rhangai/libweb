@@ -247,7 +247,7 @@ class API extends APIRouteConfiguration {
 		} else {
 			$data = $req->param( '_json' );
 			if ( $data != null ) {
-				$data = json_decode( utf8_encode( base64_decode( $data ) ), true );
+				$data = json_decode( base64_decode( $data ), true );
 				foreach( $data as $key => $value )
 					$req->paramsPost()->set( $key, $value );
 			}
