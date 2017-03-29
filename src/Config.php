@@ -27,6 +27,24 @@ class Config {
 		return $value;
 	}
 
+	public static function set( $name, $value ) {
+		$name  = explode( '.', $name );
+		self::setInternal( self::$config, $name, $value );
+		return $value;
+	}
+
+    public static function setInternal( &$config, $path, $value, $i = 0 ) {
+		if ( is_string( $path ) )
+			return self::setInternal( $config, explode( ".", $path ), $value, $i );
+		if ( $i >= count( $path ) ) {
+			$config = value;
+			return;
+		}
+		if ( !is_array( $config ) )
+			$config = array();
+		self::setInternal( $config[ $path[ $i ] ], $path, $value, $i + 1 );
+	}
+
 	public static function mergeConfig( $config1, $config2 )
 	{
 		$config = $config1;
@@ -39,12 +57,18 @@ class Config {
 				$newkey = substr( $key, 1 );
 			}
 			if ( !$overwrite && is_array( $value ) && isset($config[$key]) && is_array ($config[$key]) ) {
-				$config[$newkey] = self::mergeConfig( $config[$key], $value );
+				$merged = self::mergeConfig( $config[$key], $value );
+				self::setInternal( $config, $newkey, $merged );
 			} else {
-				$config[$newkey] = $value;
+				self::setInternal( $config, $newkey, $value );
 			}
 		}
 		return $config;
 	}
+
+	public static function raw() {
+	    return self::$config;
+	}
 	
 }
+
