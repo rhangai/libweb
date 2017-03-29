@@ -20,4 +20,8 @@ class ValidatorException extends \Exception {
 		parent::__construct( "Validation error".$fields_str.$error_message );
 	}
 
+	public function serializeAPI() {
+		return $this->state ? $this->state->errors : null;
+	}
+	
 };
