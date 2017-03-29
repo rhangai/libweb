@@ -271,20 +271,28 @@ class API extends APIRouteConfiguration {
 		} catch( \Exception $e ) {
 			$res->code( 400 );
 			error_log( $e );
-			$data = null;
-			if ( $errHandler ) {
-				$data = call_user_func( $errHandler, $e );
-				if ( is_object($data) && method_exists( $data, 'serializeAPI' ) )
-					$data = $data->serializeAPI();
-			} else if ( is_object( $e ) && method_exists( $e, 'serializeAPI' ) ) {
-				$data = $e->serializeAPI();
-			} else {
-				$data = $this->handleException( $e );
-				if ( is_object($data) && method_exists( $data, 'serializeAPI' ) )
-					$data = $data->serializeAPI();
-			}	
+			$data = $this->getErrorData( $e );
 			$this->sendOutput( $req, $res, array( "status" => "error", "error" => $data ) );
 		}
+	}
+	/**
+	 * Get the error data
+	 */
+	public function getErrorData( $e ) {
+		$data = null;
+		if ( $errHandler ) {
+			$data = call_user_func( $errHandler, $e );
+			if ( $data !== null ) {
+				if ( is_object($data) && method_exists( $data, 'serializeAPI' ) )
+					$data = $data->serializeAPI();
+				return $data;
+			}
+		}
+		
+		$data = $this->handleException( $e );
+		if ( is_object($data) && method_exists( $data, 'serializeAPI' ) )
+			$data = $data->serializeAPI();
+		return $data;
 	}
 	// Wrap the response function
 	public function createResponseFunction( $cb, $errHandler = null ) {
@@ -295,6 +303,8 @@ class API extends APIRouteConfiguration {
 	}
 	// Handle the exception in case of no handler
 	public function handleException( $e ) {
+		if ( is_object( $e ) && method_exists( $e, 'serializeAPI' ) )
+			return $e;
 		return null;
 	}
 	/**
