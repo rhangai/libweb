@@ -37,7 +37,7 @@ class Config {
 		if ( is_string( $path ) )
 			return self::setInternal( $config, explode( ".", $path ), $value, $i );
 		if ( $i >= count( $path ) ) {
-			$config = value;
+			$config = $value;
 			return;
 		}
 		if ( !is_array( $config ) )
