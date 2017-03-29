@@ -278,7 +278,11 @@ class API extends APIRouteConfiguration {
 					$data = $data->serializeAPI();
 			} else if ( is_object( $e ) && method_exists( $e, 'serializeAPI' ) ) {
 				$data = $e->serializeAPI();
-			}
+			} else {
+				$data = $this->handleException( $e );
+				if ( is_object($data) && method_exists( $data, 'serializeAPI' ) )
+					$data = $data->serializeAPI();
+			}	
 			$this->sendOutput( $req, $res, array( "status" => "error", "error" => $data ) );
 		}
 	}
@@ -288,6 +292,10 @@ class API extends APIRouteConfiguration {
 			$this->response( $cb, $errHandler, $req, $res );
 		};
 		return $fn;
+	}
+	// Handle the exception in case of no handler
+	public function handleException( $e ) {
+		return null;
 	}
 	/**
 	 * Send the output
