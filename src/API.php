@@ -12,9 +12,9 @@ class APIRouteConfiguration {
 
 	/// Construct the configuration object
 	public function __construct( $api, $router, $root ) {
-		$this->api    = $api;
+		$this->api	  = $api;
 		$this->router = $router;
-		$this->root   = $this->normalizePath( $root );
+		$this->root	  = $this->normalizePath( $root );
 	}
 	/// Get the router
 	public function getRouter() {
@@ -23,7 +23,7 @@ class APIRouteConfiguration {
 	/// Add a new route
 	private function addRoute( $methods, $path, $handler ) {
 		$this->router->respond(
-		    $methods,
+			$methods,
 			$this->joinPath( $this->root, $path ),
 			$handler
 		);
@@ -45,7 +45,7 @@ class APIRouteConfiguration {
 	}
 	// Register the object
 	public function registerObject( $obj, $base = null ) {
-		$methods    = get_class_methods( get_class( $obj ) );
+		$methods	= get_class_methods( get_class( $obj ) );
 		$errHandler = null;
 		if ( method_exists( $obj, 'handleException' ) )
 			$errHandler = array( $obj, 'handleException' );
@@ -54,11 +54,11 @@ class APIRouteConfiguration {
 			$raw = false;
 			$methodName = $method;
 			if ( substr( $methodName, 0, 3 ) === 'RAW' ) {
-				$raw        = true;
+				$raw		= true;
 				$methodName = substr( $methodName, 3 );
 			}
 
-			$path           = null;
+			$path			= null;
 			$respondMethods = null;
 
 			if ( preg_match('/^GET_(\w+)$/', $methodName, $matches ) ) {
@@ -78,14 +78,14 @@ class APIRouteConfiguration {
 				if ( $raw ) {
 					$handler = function() use ($obj, $method) {
 						$args = func_get_args();
-					    call_user_func_array( array( $obj, $method ), $args );
+						call_user_func_array( array( $obj, $method ), $args );
 						exit;
 					};
 				} else {
 					$handler = $this->api->createResponseFunction( array( $obj, $method ), $errHandler );
-                }
+				}
 				$this->addRoute(
-				    $respondMethods,
+					$respondMethods,
 					$this->joinPath( $base, $path ),
 					$handler
 				);
@@ -101,7 +101,7 @@ class APIRouteConfiguration {
 	}
 	// Register a dir
 	public function registerDir( $root, $options = array() ) {
-		$paths    = @$options["paths"];
+		$paths	  = @$options["paths"];
 		if ( !$paths )
 			$paths = array();
 		if ( !is_array( $paths ) )
@@ -112,17 +112,17 @@ class APIRouteConfiguration {
 		if ( !$base )
 			$base = "";
 
-		$curdir   = $root;
+		$curdir	  = $root;
 		$pathbase = '/';
 		if ( count($paths) > 0 ) {
 			$pathbase = implode( "/", $paths ) . "/";
-			$curdir   = $curdir.$pathbase;
+			$curdir	  = $curdir.$pathbase;
 		}
 		$curdir = $this->normalizePath( $curdir );
 
 		$loadFunction = @$options["load"];
 		if ( !$loadFunction ) {
-			$loadFunction    = array( get_class($this), 'defaultLoadFunction' );
+			$loadFunction	 = array( get_class($this), 'defaultLoadFunction' );
 			$options["load"] = $loadFunction;
 		}
 		
@@ -133,7 +133,7 @@ class APIRouteConfiguration {
 
 			$filepath = $this->normalizePath( $curdir . '/'. $file );
 			if ( is_dir( $filepath ) ) {
-				$newpaths   = $paths;
+				$newpaths	= $paths;
 				$newpaths[] = $file;
 				$newoptions = $options;
 				$newoptions["paths"] = $newpaths;
@@ -148,19 +148,23 @@ class APIRouteConfiguration {
 
 
 			$obj = call_user_func( $loadFunction, $this, (object) array(
-				"path"    => $filepath,
-				"base"    => $filebase,
-				"ext"     => $fileext,
-				"paths"   => $paths,
+				"path"	  => $filepath,
+				"base"	  => $filebase,
+				"ext"	  => $fileext,
+				"paths"	  => $paths,
 				"options" => $options,
 			));
-		    $this->registerObject( $obj, $base . '/' . $pathbase . strtolower( $filebase ) );
+			if ( $obj === false )
+				continue;
+			if ( !$obj )
+				throw new \Exception( 'Could not find API class for "'.$filepath.'"' );
+			$this->registerObject( $obj, $base . '/' . $pathbase . strtolower( $filebase ) );
 		}
 	}
 	/**
 	 * Normalize the path
 	 */
-    public function normalizePath( $path ) {
+	public function normalizePath( $path ) {
 		if ( !$path )
 			return '/';
 		if ( $path[0] !== '/' )
@@ -176,7 +180,7 @@ class APIRouteConfiguration {
 	/**
 	 * Join and normalize path
 	 */
-    public function joinPath( $path1, $path2 ) {
+	public function joinPath( $path1, $path2 ) {
 		if ( !$path1 )
 			return $this->normalizePath( $path2 );
 		else if ( !$path2 )
@@ -263,7 +267,7 @@ class API extends APIRouteConfiguration {
 			$data = call_user_func( $cb, $req, $res );
 			if ( is_object($data) && method_exists( $data, 'serializeAPI' ) )
 				$data = $data->serializeAPI();
-		    $this->sendOutput( $req, $res, array( "status" => "success", "data" => $data ) );
+			$this->sendOutput( $req, $res, array( "status" => "success", "data" => $data ) );
 		} catch( \Exception $e ) {
 			$res->code( 400 );
 			error_log( $e );
@@ -275,7 +279,7 @@ class API extends APIRouteConfiguration {
 			} else if ( is_object( $e ) && method_exists( $e, 'serializeAPI' ) ) {
 				$data = $e->serializeAPI();
 			}
-		    $this->sendOutput( $req, $res, array( "status" => "error", "error" => $data ) );
+			$this->sendOutput( $req, $res, array( "status" => "error", "error" => $data ) );
 		}
 	}
 	// Wrap the response function
@@ -288,13 +292,13 @@ class API extends APIRouteConfiguration {
 	/**
 	 * Send the output
 	 */
-    protected function sendOutput( $req, $res, $output ) {
+	protected function sendOutput( $req, $res, $output ) {
 		$res->json( $output );
 	}
 	/**
 	 * Convert a method name to a path
 	 */
-    public function nameToPath( $name ) {
+	public function nameToPath( $name ) {
 		$path = str_replace( '_', '/', $name );
 		$path = preg_replace_callback( '/([a-z])([A-Z])/', function( $matches ) {
 			return $matches[1].'-'.strtolower( $matches[2] );
