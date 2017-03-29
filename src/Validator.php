@@ -52,6 +52,8 @@ class ValidatorRules {
 			$state->errors[] = array( "name" => "call", "data" => $fn );
 			return;
 		}
+		if ( $ret === true )
+			return;
 		$state->value = $ret;
 	}
 	/// Trim the string
