@@ -16,8 +16,8 @@ class DB {
 	
 	protected function createConnection( $options ) {
 		return new PDO(
-		    @$options['url'] ?: Config::get( 'PDO.url' ),
-		    @$options['user'] ?: Config::get( 'PDO.user' ),
+			@$options['url'] ?: Config::get( 'PDO.url' ),
+			@$options['user'] ?: Config::get( 'PDO.user' ),
 			@$options['password'] ?: Config::get( 'PDO.password' ),
 			array( PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION )
 		);
@@ -26,12 +26,12 @@ class DB {
 	public function fetchOne( $query, $data = null, $fetchMode = PDO::FETCH_OBJ, $fetchArg = null ) {
 		if ( $data != null ) {
 			$stmt = $this->db->prepare( $query );
-		    $stmt->execute( $data );
+			$stmt->execute( $data );
 			$result = $fetchArg != null ? $stmt->fetch( $fetchMode, $fetchArg ) : $stmt->fetch( $fetchMode );
 			$stmt->closeCursor();
 			return $result;
 		} else {
-			$stmt   = $this->db->query( $query );
+			$stmt	= $this->db->query( $query );
 			$result = $fetchArg != null ? $stmt->fetch( $fetchMode, $fetchArg ) : $stmt->fetch( $fetchMode );
 			$stmt->closeCursor();
 			return $result;
@@ -42,10 +42,10 @@ class DB {
 	}
 
 	public function fetchAll( $query, $data = null, $fetchMode = PDO::FETCH_OBJ, $fetchArg = null ) {
-		$db   = $this->db;
+		$db	  = $this->db;
 		if ( $data != null ) {
-			$stmt   = $db->prepare( $query );
-		    $stmt->execute( $data );
+			$stmt	= $db->prepare( $query );
+			$stmt->execute( $data );
 			return ( $fetchArg != null ) ? $stmt->fetchAll( $fetchMode, $fetchArg ) : $stmt->fetchAll( $fetchMode );
 		} else {
 			$stmt = $db->query( $query );
@@ -60,12 +60,12 @@ class DB {
 	 * Execute a query
 	 */
 	public function execute( $query, $data = null ) {
-		$db   = $this->db;
+		$db	  = $this->db;
 		if ( $data != null ) {
-		    $stmt = $db->prepare( $query );
-		    $stmt->execute( $data );
+			$stmt = $db->prepare( $query );
+			$stmt->execute( $data );
 		} else {
-		    $db->query( $query );
+			$db->query( $query );
 		}
 		return $db->lastInsertId();
 	}
@@ -77,14 +77,14 @@ class DB {
 	 * Insert a data on the table
 	 */
 	public function insertInto( $table, $data ) {
-		$db     = $this->db;
-		$table  = $this->quoteIdentifier( $table );
-		$data   = is_object($data) ? ((array)$data) : $data;
+		$db		= $this->db;
+		$table	= $this->quoteIdentifier( $table );
+		$data	= is_object($data) ? ((array)$data) : $data;
 		if ( !is_array($data) )
 			throw new \Exception( "Invalid data. Must be array or object." );
 		$fields = '('.implode( ',', array_map( array( $this, 'quoteIdentifier' ), array_keys( $data ) ) ).')';
 		$values = array_values( $data );
-	    $query = "INSERT INTO ".$table.$fields." VALUES (". implode(',', array_fill(0, count( $values ), '?')).")";
+		$query = "INSERT INTO ".$table.$fields." VALUES (". implode(',', array_fill(0, count( $values ), '?')).")";
 		return $this->execute( $query, $values );
 	}
 	public function insertIntoSafe( &$err, $table, $data ) {
@@ -95,13 +95,13 @@ class DB {
 	 * Execute a query multiple times
 	 */
 	public function executeArray( $query, $data, $map = null, $cb = null ) {
-		$db     = $this->db;
-		$stmt   = $db->prepare( $query );
+		$db		= $this->db;
+		$stmt	= $db->prepare( $query );
 		
 		foreach( $data as $item ) {
 			if ( $map )
 				$item = call_user_func( $map, $item );
-		    $stmt->execute( $item );
+			$stmt->execute( $item );
 			if ( $cb )
 				call_user_func( $cb, $db->lastInsertId() );
 		}
@@ -123,12 +123,12 @@ class DB {
 		}
 		return $ret;
 	}
-    public function transactionSafe( &$err, $cb ) {
+	public function transactionSafe( &$err, $cb ) {
 		return $this->callSafe( $err, 'transaction', array( $cb ) );
 	}
 	
 	public function writeFileStream( $stream, $nome = "", $tipo = "", $info = "" ) {
-		$db   = $this->db;
+		$db	  = $this->db;
 		$stmt = $db->prepare( "INSERT INTO File (Nome,Tipo,Info,Criado,Dados) VALUES (?,?,?,NOW(),?)" );
 
 		$stmt->bindParam( 1, $nome );
@@ -140,7 +140,7 @@ class DB {
 	}
 
 	public function readFileStream( $id, $cb ) {
-		$db   = DB::get();
+		$db	  = DB::get();
 		$stmt = $db->prepare( "SELECT Nome,Tipo,Info,Dados FROM File WHERE ID=?" );
 
 		$stmt->execute( array($id) );
@@ -163,7 +163,7 @@ class DB {
 	}
 	
 	// Call safe
-    private function callSafe( &$err, $method, $args ) {
+	private function callSafe( &$err, $method, $args ) {
 		try {
 			return call_user_func_array( array( $this, $method ), $args );
 		} catch ( PDOException $e ) {
@@ -173,7 +173,7 @@ class DB {
 	}
 
 	// Quote identifier
-    public function quoteIdentifier( $identifier ) {
+	public function quoteIdentifier( $identifier ) {
 		return "`".str_replace( "`", "``", $identifier )."`";
 	}
 
@@ -182,7 +182,7 @@ class DB {
 	public static function instance() {
 		$k = get_called_class();
 		if ( !@self::$instances[ $k ] )
-			self::$instances[ $k ]  = new static;
-	    return self::$instances[ $k ];
+			self::$instances[ $k ]	= new static;
+		return self::$instances[ $k ];
 	}
 }
