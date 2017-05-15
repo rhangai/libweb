@@ -115,7 +115,7 @@ class APIRouteConfiguration {
 		$curdir	  = $root;
 		$pathbase = '/';
 		if ( count($paths) > 0 ) {
-			$pathbase = implode( "/", $paths ) . "/";
+			$pathbase = "/" . implode( "/", $paths ) . "/";
 			$curdir	  = $curdir.$pathbase;
 		}
 		$curdir = $this->normalizePath( $curdir );
