@@ -44,7 +44,7 @@ Setup a single entry point on your foler
 <?php
 use LibWeb\API;
 
-$api = new API( "/path/to/root/dir", "MyProject\\Base\\Namespace" );
+$api = new API( "MyProject\\Base\\Namespace", "/path/to/root/dir" );
 $api->dispatch();
 ```
 
