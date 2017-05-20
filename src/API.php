@@ -1,326 +1,165 @@
-<?php namespace LibWeb;
-/**
+<?php
+namespace LibWeb;
 
-   Create an API configuration object
+use LibWeb\api\Response;
+use LibWeb\api\Request;
+use LibWeb\api\ExceptionNotFound;
 
-*/
-class APIRouteConfiguration {
-
-	private $api;
-	private $router;
-	private $root;
-
-	/// Construct the configuration object
-	public function __construct( $api, $router, $root ) {
-		$this->api	  = $api;
-		$this->router = $router;
-		$this->root	  = $this->normalizePath( $root );
+class API {
+    private $rootNamespace;
+    private $rootDir;
+	/// Construct the API
+	public function __construct( $namespace = null, $dir = null ) {
+		$this->rootNamespace = $namespace;
+		$this->rootDir       = $dir;
 	}
-	/// Get the router
-	public function getRouter() {
-		return $this->router;
+	/// Dispatch the URI
+	public function dispatch( $uri = null, $method = null ) {
+		$req = Request::createFromGlobals( $uri, $method );
+		return $this->dispatchRequest( $req );
 	}
-	/// Add a new route
-	private function addRoute( $methods, $path, $handler ) {
-		$this->router->respond(
-			$methods,
-			$this->joinPath( $this->root, $path ),
-			$handler
-		);
+	/// Dispatch the requesti
+	public function dispatchRequest( $req, $send = true ) {
+		$res   = new Response;
+		$found = $this->dispatchInternal( $req, $res );
+		if ( $found === false ) {
+			$ret = $this->handleNotFound( $req, $res );
+			if ( $ret != null )
+				$res->data( $ret );
+		}	
+		if ( $send )
+			$this->sendResponse( $req, $res );
+		return $res;
 	}
-	/// Register a GET method
-	public function GET( $path, $handler, $errHandler = null ) {
-		$handler = $this->api->createResponseFunction( $handler, $errHandler );
-		$this->addRoute( "GET", $path, $handler );
-	}
-	/// Register a POST method
-	public function POST( $path, $handler, $errHandler = null ) {
-		$handler = $this->api->createResponseFunction( $handler, $errHandler );
-		$this->addRoute( "GET", $path, $handler );
-	}
-	/// Register a POST and GET methods
-	public function REQUEST( $path, $handler, $errHandler = null ) {
-		$handler = $this->api->createResponseFunction( $handler, $errHandler );
-		$this->addRoute( array( "GET", "POST" ), $path, $handler );
-	}
-	// Register the object
-	public function registerObject( $obj, $base = null ) {
-		$methods	= get_class_methods( get_class( $obj ) );
-		$errHandler = null;
-		if ( method_exists( $obj, 'handleException' ) )
-			$errHandler = array( $obj, 'handleException' );
+	/**
+	 * Internally dispatches the API
+	 */
+	private function dispatchInternal( $req, $res ) {
+		$paths = array_values( array_filter( explode( "/", $req->uri() ) ) );
+		$len   = count( $paths );
+		
+		$preHandlers = array();
 
-		foreach ( $methods as $method ) {
-			$raw = false;
-			$methodName = $method;
-			if ( substr( $methodName, 0, 3 ) === 'RAW' ) {
-				$raw		= true;
-				$methodName = substr( $methodName, 3 );
-			}
-
-			$path			= null;
-			$respondMethods = null;
-
-			if ( preg_match('/^GET_(\w+)$/', $methodName, $matches ) ) {
-				$name = $matches[1];
-				$path = $this->api->nameToPath( $name );
-				$respondMethods = 'GET';
-			} else if ( preg_match('/^POST_(\w+)$/', $methodName, $matches ) ) {
-				$name = $matches[1];
-				$path = $this->api->nameToPath( $name );
-				$respondMethods = 'POST';
-			} else if ( preg_match('/^REQUEST_(\w+)$/', $methodName, $matches ) ) {
-				$name = $matches[1];
-				$path = $this->api->nameToPath( $name );
-				$respondMethods = array( 'POST', 'GET' );
-			}
-			if ( $path ) {
-				if ( $raw ) {
-					$handler = function() use ($obj, $method) {
-						$args = func_get_args();
-						call_user_func_array( array( $obj, $method ), $args );
-						exit;
-					};
-				} else {
-					$handler = $this->api->createResponseFunction( array( $obj, $method ), $errHandler );
-				}
-				$this->addRoute(
-					$respondMethods,
-					$this->joinPath( $base, $path ),
-					$handler
-				);
+		
+		$path    = array_slice( $paths, 0, $len - 1 );
+	    $obj     = $this->resolvePath( $path, $this->rootDir, $this->rootNamespace );
+		if ( !$obj )
+			return false;
+		$functionName = $this->resolveFunction( $obj, $paths[ $len - 1 ], $req );
+	    
+		$method      = $req->method();
+		$mainHandler = array( $obj, strtoupper($method).'_' . $functionName );
+		if ( !$mainHandler || !is_callable( $mainHandler ) )
+			return false;
+		
+		// Check for middleware on the current path
+		$handler  = array( $this, "middleware" );
+		if ( is_callable( $handler ) )
+			$preHandlers[] = $handler;
+		
+		// Check for middlewares on the path
+		for ( $i = 0; $i < $len - 1; ++$i ) {
+			$path   = array_slice( $paths, 0, $i );
+			$path[] = "_Parent";
+			$obj    = $this->resolvePath( $path, $this->rootDir, $this->rootNamespace );
+			if ( $obj ) {
+			    $handler = array( $obj, "middleware" );
+				if ( is_callable( $handler ) )
+					$preHandlers[] = $handler;
 			}
 		}
+
+		// Call handlers
+		$handlers   = $preHandlers;
+		$handlers[] = $mainHandler;
+		foreach( $handlers as $handler ) {
+			try {
+				$ret = call_user_func( $handler, $req, $res );
+			} catch( \Exception $e ) {
+			    $ret = $this->handleException( $e, $req, $res );
+			}
+			if ( $ret != null ) {
+				$res->data( $ret );
+				break;
+			} else if ( $res->getData() )
+				break;
+		}
+		return true;
 	}
-	// Default load function
-	public static function defaultLoadFunction( $api, $file ) {
-		require_once $file->path;
-		$klass = $file->base . "API";
-		$obj   = new $klass;
+	/// Resolve a path to a object
+	protected function resolvePath( $path, $rootDir, $rootNamespace ) {
+		if ( !$path )
+			return $this;
+	    $path = array_map(function( $item ) { return API::_toPascalCase( $item, true ); }, $path );
+		$file = implode( "/", $path ).".php";
+		if ( $rootDir )
+			$file = $rootDir."/".$file;
+		$included = @include $file;
+		if ( $included === false )
+			 return null;
+
+		$len = count( $path );
+		if ( !$rootNamespace ) {
+			$klassname = "\\".$path[ $len - 1 ]."API";
+		} else {
+			$klassname = $rootNamespace."\\".implode( "\\", $path )."API";
+		}
+		$obj = new $klassname;
 		return $obj;
 	}
-	// Register a dir
-	public function registerDir( $root, $options = array() ) {
-		$paths	  = @$options["paths"];
-		if ( !$paths )
-			$paths = array();
-		if ( !is_array( $paths ) )
-			$paths = array( $paths );
-
-
-		$base = @$options["base"];
-		if ( !$base )
-			$base = "";
-
-		$curdir	  = $root;
-		$pathbase = '/';
-		if ( count($paths) > 0 ) {
-			$pathbase = "/" . implode( "/", $paths ) . "/";
-			$curdir	  = $curdir.$pathbase;
-		}
-		$curdir = $this->normalizePath( $curdir );
-
-		$loadFunction = @$options["load"];
-		if ( !$loadFunction ) {
-			$loadFunction	 = array( get_class($this), 'defaultLoadFunction' );
-			$options["load"] = $loadFunction;
-		}
-		
-		$files = scandir( $curdir );
-		foreach ( $files as $file ) {
-			if ( ( $file === '.' ) || ( $file === '..' ) || ( $file[0] === '_' ) )
-				continue;
-
-			$filepath = $this->normalizePath( $curdir . '/'. $file );
-			if ( is_dir( $filepath ) ) {
-				$newpaths	= $paths;
-				$newpaths[] = $file;
-				$newoptions = $options;
-				$newoptions["paths"] = $newpaths;
-				$this->registerDir( $root, $newoptions );
-				continue;
-			}
-
-			$fileext   = pathinfo($filepath, PATHINFO_EXTENSION);
-			if ( $fileext !== 'php' )
-				continue;
-			$filebase  = pathinfo($filepath, PATHINFO_FILENAME);
-
-
-			$obj = call_user_func( $loadFunction, $this, (object) array(
-				"path"	  => $filepath,
-				"base"	  => $filebase,
-				"ext"	  => $fileext,
-				"paths"	  => $paths,
-				"options" => $options,
-			));
-			if ( $obj === false )
-				continue;
-			if ( !$obj )
-				throw new \Exception( 'Could not find API class for "'.$filepath.'"' );
-			$this->registerObject( $obj, $base . '/' . $pathbase . strtolower( $filebase ) );
-		}
+	/// Resolve a function name
+	protected function resolveFunction( $obj, $name, $req ) {
+		return self::_toPascalCase( $name );
 	}
-	/**
-	 * Normalize the path
-	 */
-	public function normalizePath( $path ) {
-		if ( !$path )
-			return '/';
-		if ( $path[0] !== '/' )
-			$path = '/'.$path;
-		if ( $path[strlen($path)-1] === '/' )
-			$path = substr( $path, 0, strlen($path)-1 );
-
-		$path = preg_replace( '/\\\\/', '/', $path );
-		$path = preg_replace( '/\\/\\/+/', '/', $path );
-		
-		return $path;
+	/// Convert to pascal case
+	private static function _toPascalCase( $str, $capitalizeFirst = false ) {
+		$str = str_replace(' ', '', ucwords(str_replace('-', ' ', $str)));
+		if ( !$capitalizeFirst )
+			$str = lcfirst( $str );
+		return $str;
 	}
-	/**
-	 * Join and normalize path
-	 */
-	public function joinPath( $path1, $path2 ) {
-		if ( !$path1 )
-			return $this->normalizePath( $path2 );
-		else if ( !$path2 )
-			return $this->normalizePath( $path1 );
-		$path = $path1.'/'.$path2;
-		return $this->normalizePath( $path );
-	}
-	
-};
-
-// API request
-class APIRequest extends \Klein\Request {
-	private $paramsCache = null;
-	public function refreshCache() {
-		$this->paramsCache = null;
-	}
-	public function paramsRequest() {
-		if ( $this->paramsCache == null ) {
-			$this->paramsCache = array_merge(
-				$this->params_get->all( null, false ),
-				$this->params_post->all( null, false )
-			);
-		}
-		return $this->paramsCache;
-	}
-	public function param( $key, $default = null ) {
-		$params = $this->paramsRequest();
-		return isset($params[$key]) ? $params[$key] : $default;
-	}
-};
-
-/**
- * API class
- *
- */
-class API extends APIRouteConfiguration {
-	/**
-	 *
-	 */
-	public function __construct( $root = '/' ) {
-		$router = new \Klein\Klein();
-		parent::__construct( $this, $router, $root );
-	}
-	/**
-	 * Dispatch the current route calling the registered ones
-	 */
-	public function dispatch( $options = null ) {
-		$req = APIRequest::createFromGlobals();
-
-		// Options
-		if ( $options ) {
-			if ( is_string( $options ) )
-				$options = array( "uri" => $options );
-			   
-			if ( @$options[ 'uri' ] ) {
-				$req->server()->set( "REQUEST_URI", $options['uri'] );
-			}
-		}
-
-		// Json
-		if ( @$_SERVER['CONTENT_TYPE'] === 'application/json' ) {
-			$data = $req->body();
-			if ( $data != null ) {
-				$data = json_decode( $data, true );
-				foreach( $data as $key => $value )
-					$req->paramsPost()->set( $key, $value );
-			}
-		} else {
-			$data = $req->param( '_json' );
-			if ( $data != null ) {
-				$data = json_decode( base64_decode( $data ), true );
-				foreach( $data as $key => $value )
-					$req->paramsPost()->set( $key, $value );
-			}
-		}
-		$req->refreshCache();
-		$this->getRouter()->dispatch( $req );
-	}
-	/**
-	 * Call a response object and write a response
-	 */
-	public function response( $cb, $errHandler, $req, $res ) {
-		try {
-			$data = call_user_func( $cb, $req, $res );
-			if ( is_object($data) && method_exists( $data, 'serializeAPI' ) )
-				$data = $data->serializeAPI();
-			$this->sendOutput( $req, $res, array( "status" => "success", "data" => $data ) );
-		} catch( \Exception $e ) {
-			$res->code( 400 );
-			error_log( $e );
-			$data = $this->getErrorData( $e );
-			$this->sendOutput( $req, $res, array( "status" => "error", "error" => $data ) );
-		}
-	}
-	/**
-	 * Get the error data
-	 */
-	public function getErrorData( $e ) {
-		$data = null;
-		if ( $errHandler ) {
-			$data = call_user_func( $errHandler, $e );
-			if ( $data !== null ) {
-				if ( is_object($data) && method_exists( $data, 'serializeAPI' ) )
-					$data = $data->serializeAPI();
-				return $data;
-			}
-		}
-		
-		$data = $this->handleException( $e );
-		if ( is_object($data) && method_exists( $data, 'serializeAPI' ) )
+	/// Format the response
+	public function formatResponse( $status, $data, $req, $res ) {
+		if ( is_object( $data) && is_callable( array( $data, "serializeAPI" ) ) )
 			$data = $data->serializeAPI();
 		return $data;
 	}
-	// Wrap the response function
-	public function createResponseFunction( $cb, $errHandler = null ) {
-		$fn = function( $req, $res ) use ($cb, $errHandler) {
-			$this->response( $cb, $errHandler, $req, $res );
-		};
-		return $fn;
+	/// Defaults to sending JSON api
+	public function sendResponse( $req, $res ) {
+		$responseCode = $res->getCode() ?: 200;
+		$headers      = $res->getHeaders();
+		$data         = $res->getData();
+		$raw          = $res->getRaw();
+		
+		// Status of the response
+		$status = $responseCode === 200 ? "success" : "error";
+
+		// Send headers
+		http_response_code( $responseCode );
+		if ( !$raw && !isset( $headers["content-type"] ) )
+			header( "content-type: application/json" );
+		foreach ( $headers as $key => $value ) {
+			header( $key.": ".$value );
+		}
+
+		// Send data
+		if ( $data instanceof \Closure )
+			call_user_func( $data );
+		else if ( $raw )
+			echo $data;
+		else
+			echo json_encode( $this->formatResponse( $status, $data, $req, $res ) );
 	}
-	// Handle the exception in case of no handler
-	public function handleException( $e ) {
-		if ( is_object( $e ) && method_exists( $e, 'serializeAPI' ) )
-			return $e;
-		return null;
+	/// Internal not found handler (May be overwritten)
+	public function handleNotFound( $req, $res ) {
+		$res->code( 404 );
+		$res->header( "content-type", "text/text" );
+		$res->raw( "Cannot ".$req->method()." ".$req->uri() );
 	}
-	/**
-	 * Send the output
-	 */
-	protected function sendOutput( $req, $res, $output ) {
-		$res->json( $output );
+	/// Exception handler (May be overwritten)
+	public function handleException( $e, $req, $res ) {
+		$res->code( 500 );
+		$res->data( $e );
 	}
-	/**
-	 * Convert a method name to a path
-	 */
-	public function nameToPath( $name ) {
-		$path = str_replace( '_', '/', $name );
-		$path = preg_replace_callback( '/([a-z])([A-Z])/', function( $matches ) {
-			return $matches[1].'-'.strtolower( $matches[2] );
-		}, $path );
-		return '/'.$path;
-	}
+	
 };
