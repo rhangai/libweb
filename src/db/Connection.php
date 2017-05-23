@@ -12,7 +12,7 @@ class Connection {
 	public function __construct( $db ) {
 		$this->db = $db;
 	}
-	/// Get the internal PDO object
+	// Get the internal PDO object
 	public function getPDO() { return $this->db; }
 	/**
 	 * Prepare and execute a query
@@ -26,7 +26,6 @@ class Connection {
 			return $this->db->query( $query );
 		}
 	}
-	
 	/**
 	 * Fetch a single object
 	 */
@@ -41,12 +40,11 @@ class Connection {
 		return $result;
 	}
 	/**
-	 * Fetch every object from the query
+	 * Fetch all methods
 	 */
 	public function fetchAll( $query, $data = null, $options = null ) {
-		$stmt = $this->prepareExecuteQuery( $query, $data );
-		$result = $fetchArg != null ? $stmt->fetchAll( $fetchMode, $fetchArg ) : $stmt->fetchAll( $fetchMode );
-		return $result;
+		$stmt   = $this->prepareExecuteQuery( $query, $data );
+		return new StatementResult( $stmt );
 	}
 	/**
 	 * Execute a query
@@ -59,7 +57,7 @@ class Connection {
 		);
 	}
 	/**
-	 * Insert a data on the table
+	 * Insert a data on a given table
 	 */
 	public function insertInto( $table, $data ) {
 		$db		= $this->db;
@@ -67,12 +65,13 @@ class Connection {
 		$data	= is_object($data) ? ((array)$data) : $data;
 		if ( !is_array($data) )
 			throw new \Exception( "Invalid data. Must be array or object." );
+		
 		$fields = '('.implode( ',', array_map( array( $this, 'quoteIdentifier' ), array_keys( $data ) ) ).')';
 		$values = array_values( $data );
 		$query = "INSERT INTO ".$table.$fields." VALUES (". implode(',', array_fill(0, count( $values ), '?')).")";
 
-		$result = $this->execute( $query, $values );
-		return $result->id;
+		$stmt = $this->prepareExecuteQuery( $query, $data );
+		return $this->db->lastInsertId();
 	}
 	/**
 	 * Create a transaction
