@@ -1,9 +1,14 @@
 <?php namespace LibWeb;
 
+/**
+ * Class config
+ */
 class Config {
 
 	private static $config = array();
-
+	/**
+	 * Feed a json file
+	 */
 	public static function feedJSON( $file ) {
 		$contents = @file_get_contents( $file );
 		if ( $contents === false )
@@ -14,10 +19,15 @@ class Config {
 			throw new \Exception( "Could not decode file '".$file."'" );
 		self::feed( $obj );
 	}
+	/**
+	 * Feed a single object
+	 */
 	public static function feed( $obj ) {
 		self::$config = self::mergeConfig( self::$config, $obj );
 	}
-
+	/**
+	 * Get a configuration
+	 */
 	public static function get( $name ) {
 		$name  = explode( '.', $name );
 		$value = self::$config;
@@ -26,14 +36,18 @@ class Config {
 		}
 		return $value;
 	}
-
+	/**
+	 * Set a configuration
+	 */
 	public static function set( $name, $value ) {
 		$name  = explode( '.', $name );
 		self::setInternal( self::$config, $name, $value );
 		return $value;
 	}
-
-    public static function setInternal( &$config, $path, $value, $i = 0 ) {
+	/**
+	 * Internally set a configuration object
+	 */
+    private static function setInternal( &$config, $path, $value, $i = 0 ) {
 		if ( is_string( $path ) )
 			return self::setInternal( $config, explode( ".", $path ), $value, $i );
 		if ( $i >= count( $path ) ) {
@@ -44,7 +58,9 @@ class Config {
 			$config = array();
 		self::setInternal( $config[ $path[ $i ] ], $path, $value, $i + 1 );
 	}
-
+	/**
+	 * Merge two config objects
+	 */
 	public static function mergeConfig( $config1, $config2 )
 	{
 		$config = $config1;
@@ -65,7 +81,7 @@ class Config {
 		}
 		return $config;
 	}
-
+	// Get the raw config object
 	public static function raw() {
 	    return self::$config;
 	}
