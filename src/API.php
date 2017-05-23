@@ -164,7 +164,7 @@ class API {
 			end( $obj );
 			$lastKey  = key( $obj );
 			$size     = count( $obj );
-			if ( ( $firstKey == 0 ) && ( $lastKey == ( $size-1 ) ) )
+			if ( ( $firstKey === 0 ) && ( $lastKey === ( $size-1 ) ) )
 				$isArray = true;
 			else
 				$isObject = true;
