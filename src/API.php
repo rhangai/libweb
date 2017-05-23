@@ -120,6 +120,12 @@ class API {
 	}
 	/// Format the response
 	public function formatResponse( $status, $data, $req, $res ) {
+		if ( $data instanceof \Exception ) {
+			if ( $data && is_callable( array( $data, "serializeAPI" ) ) )
+				return $data->serializeAPI();
+			return null;
+		}
+		
 		if ( is_object( $data) && is_callable( array( $data, "serializeAPI" ) ) )
 			$data = $data->serializeAPI();
 		return $data;
@@ -212,8 +218,13 @@ class API {
 	}
 	/// Exception handler (May be overwritten)
 	public function handleException( $e, $req, $res ) {
-		$res->code( 500 );
-		$res->data( $e );
+		if ( $e instanceof \LibWeb\APIException ) {
+			$res->code( $e->getCode() );
+			$res->data( $e );
+		} else {
+			$res->code( 500 );
+			$res->data( $e );
+		}
 	}
 	
 };
