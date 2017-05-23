@@ -148,7 +148,7 @@ class API {
 		else if ( $raw )
 			echo $data;
 		else
-			$this->writeResposne( $this->formatResponse( $status, $data, $req, $res ) );
+			$this->writeResponse( $this->formatResponse( $status, $data, $req, $res ) );
 	}
 	/// Write the response
 	public function writeResponse( $obj ) {
