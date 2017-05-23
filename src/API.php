@@ -148,7 +148,61 @@ class API {
 		else if ( $raw )
 			echo $data;
 		else
-			echo json_encode( $this->formatResponse( $status, $data, $req, $res ) );
+			$this->writeResposne( $this->formatResponse( $status, $data, $req, $res ) );
+	}
+	/// Write the response
+	public function writeResponse( $obj ) {
+		$this->writeJSON( $obj );
+	}
+	/// Write a JSON
+	public function writeJSON( $obj ) {
+		$isArray  = false;
+		$isObject = false;
+		if ( is_array( $obj ) ) {
+			reset( $obj );
+			$firstKey = key( $obj );
+			end( $obj );
+			$lastKey  = key( $obj );
+			$size     = count( $obj );
+			if ( ( $firstKey === 0 ) && ( $lastKey === ( $size-1 ) ) )
+				$isArray = true;
+			else
+				$isObject = true;
+		} else if ( is_object( $obj ) ) {
+			if ( $obj instanceof \ArrayAccess )
+				$isArray  = true;
+			else
+				$isObject = true;
+		}
+		
+		if ( $isArray ) {
+			echo "[";
+			$first = true;
+			foreach( $obj as $val ) {
+				if ( $first ) {
+					$first = false;
+				} else {
+					echo ",";
+				}
+				$this->writeJSON( $val );
+			}
+			echo "]";
+		} else if ( $isObject ) {
+			echo "{";
+			$first = true;
+			foreach( $obj as $key => $val ) {
+				if ( $first ) {
+					$first = false;
+				} else {
+					echo ",";
+				}
+				echo '"', $key,'":';
+				$this->writeJSON( $val );
+			}
+			echo "}";
+		} else {
+			echo json_encode( $obj );
+		}
 	}
 	/// Internal not found handler (May be overwritten)
 	public function handleNotFound( $req, $res ) {
