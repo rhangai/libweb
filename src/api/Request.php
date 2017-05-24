@@ -8,8 +8,10 @@ class Request {
 	private $get_;
 	private $post_;
 	private $server_;
+	private $base_;
 
-	public function __construct( $uri, $method, $get, $post, $server ) {
+	public function __construct( $base, $uri, $method, $get, $post, $server ) {
+		$this->base_   = $base;
 		$this->uri_    = $uri;
 		$this->method_ = $method;
 		$this->get_    = $get;
@@ -32,16 +34,20 @@ class Request {
 		return $this->uri_;
 	}
 
+	public function base() {
+		return $this->base_;
+	}
+
 	public function method() {
 		return $this->method_;
 	}
 	
-	public static function createFromGlobals( $uri = null, $method = null ) {
+	public static function createFromGlobals( $base = null, $uri = null, $method = null ) {
 		if ( $uri === null )
 			$uri = $_SERVER['REQUEST_URI'];
 		if ( $method === null )
 			$method = $_SERVER['REQUEST_METHOD'];
-		return new Request( $uri, $method, $_GET, $_POST, $_SERVER );
+		return new Request( $base, $uri, $method, $_GET, $_POST, $_SERVER );
 	}
 	
 };

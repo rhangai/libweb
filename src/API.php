@@ -27,8 +27,8 @@ class API {
 		$this->ignoreFiles[] = realpath( $ignoreFiles );
 	}
 	/// Dispatch the URI
-	public function dispatch( $uri = null, $method = null ) {
-		$req = Request::createFromGlobals( $uri, $method );
+	public function dispatch( $base = null, $uri = null, $method = null ) {
+		$req = Request::createFromGlobals( $base, $uri, $method );
 		return $this->dispatchRequest( $req );
 	}
 	/// Dispatch the requesti
@@ -48,7 +48,16 @@ class API {
 	 * Internally dispatches the API
 	 */
 	private function dispatchInternal( $req, $res ) {
-		$paths = array_values( array_filter( explode( "/", $req->uri() ) ) );
+		$uri   = $req->uri();
+		$base  = $req->base();
+		if ( $base ) {
+			$len = count( $base );
+			if ( substr( $uri, 0, $len ) !== $base )
+				return false;
+			$uri = '/'.substr( $uri, $len );
+		}
+		
+		$paths = array_values( array_filter( explode( "/", $uri ) ) );
 		$len   = count( $paths );
 		
 		$preHandlers = array();
