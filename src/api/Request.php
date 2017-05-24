@@ -12,7 +12,7 @@ class Request {
 
 	public function __construct( $base, $uri, $method, $get, $post, $server ) {
 		$this->base_   = $base;
-		$this->uri_    = $uri;
+		$this->uri_    = parse_url( $uri, PHP_URL_PATH );
 		$this->method_ = $method;
 		$this->get_    = $get;
 		$this->post_   = $post;

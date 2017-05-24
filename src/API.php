@@ -51,7 +51,7 @@ class API {
 		$uri   = $req->uri();
 		$base  = $req->base();
 		if ( $base ) {
-			$len = count( $base );
+			$len = strlen( $base );
 			if ( substr( $uri, 0, $len ) !== $base )
 				return false;
 			$uri = '/'.substr( $uri, $len );
