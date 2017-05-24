@@ -8,10 +8,23 @@ use LibWeb\api\ExceptionNotFound;
 class API {
     private $rootNamespace;
     private $rootDir;
+	private $ignoreFiles;
 	/// Construct the API
 	public function __construct( $namespace = null, $dir = null ) {
 		$this->rootNamespace = $namespace;
 		$this->rootDir       = $dir;
+	}
+	/// Add a few ignore files
+	public function addIgnore( $ignoreFiles ) {
+		if ( !$ignoreFiles )
+			return;
+		if ( is_array( $ignoreFiles ) ) {
+			foreach ( $ignoreFiles as $file )
+				$this->addIgnore( $file );
+			return;
+		}
+
+		$this->ignoreFiles[] = realpath( $ignoreFiles );
 	}
 	/// Dispatch the URI
 	public function dispatch( $uri = null, $method = null ) {
@@ -94,6 +107,10 @@ class API {
 		$file = implode( "/", $path ).".php";
 		if ( $rootDir )
 			$file = $rootDir."/".$file;
+		$file = realpath( $file );
+		if ( in_array( $file, $this->ignoreFiles ) )
+			return null;
+		
 		$included = @include $file;
 		if ( $included === false )
 			 return null;
