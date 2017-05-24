@@ -62,6 +62,7 @@ class API {
 		
 		$preHandlers = array();
 
+
 		
 		$path    = array_slice( $paths, 0, $len - 1 );
 	    $obj     = $this->resolvePath( $path, $this->rootDir, $this->rootNamespace );
@@ -112,7 +113,7 @@ class API {
 	protected function resolvePath( $path, $rootDir, $rootNamespace ) {
 		if ( !$path )
 			return $this;
-	    $path = array_map(function( $item ) { return API::_toPascalCase( $item, true ); }, $path );
+	    $path[ count($path) - 1 ] = API::_toPascalCase( $path[ count($path) - 1 ], true );
 		$file = implode( "/", $path ).".php";
 		if ( $rootDir )
 			$file = $rootDir."/".$file;
@@ -145,7 +146,7 @@ class API {
 		return $str;
 	}
 	/// Format the response
-	public function formatResponse( $status, $data, $req, $res ) {
+	public function formatResponse( $status, $data, $errorType, $req, $res ) {
 		if ( $data instanceof \Exception ) {
 			if ( $data && is_callable( array( $data, "serializeAPI" ) ) )
 				return $data->serializeAPI();
@@ -179,8 +180,13 @@ class API {
 			call_user_func( $data );
 		else if ( $raw )
 			echo $data;
-		else
-			$this->writeResponse( $this->formatResponse( $status, $data, $req, $res ) );
+		else {
+			$errorType = null;
+			if ( $data instanceof APIException )
+				$errorType = $data->getType();
+			$obj = $this->formatResponse( $status, $data, $errorType, $req, $res );
+			$this->writeResponse( $obj );
+		}
 	}
 	/// Write the response
 	public function writeResponse( $obj ) {

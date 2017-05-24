@@ -4,14 +4,16 @@ namespace LibWeb;
 class APIException extends \Exception {
 
 	private $data_;
+	private $type_;
 	
-	public function __construct( $data, $code = 500, $msg = "" ) {
-		if ( is_string( $code ) ) {
-			$msg  = $code;
-			$code = 500;
-		}
+	public function __construct( $data, $type = null, $msg = "", $code = 500 ) {
 		parent::__construct( $msg, $code );
 		$this->data_ = $data;
+		$this->type_ = $type;
+	}
+	
+	public function getType() {
+		return $this->type_;
 	}
 
 	public function serializeAPI() {
