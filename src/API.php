@@ -250,6 +250,9 @@ class API {
 	}
 	/// Exception handler (May be overwritten)
 	public function handleException( $e, $req, $res ) {
+		if ( $e instanceof \Exception )
+			error_log( $e );
+		
 		if ( $e instanceof \LibWeb\APIException ) {
 			$res->code( $e->getCode() );
 			$res->data( $e );
