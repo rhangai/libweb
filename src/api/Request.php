@@ -66,6 +66,7 @@ class Request {
 							"type"     => $file["type"][$i],
 							"error"    => $file["error"][$i],
 							"size"     => $file["size"][$i],
+							"path"     => $file["tmp_name"][$i],
 						);
 						self::checkFile( $errors, $name.'['.$i.']', $newfileItem );
 						$newfile[] = $newfileItem;
@@ -78,6 +79,7 @@ class Request {
 						"type"     => $file["type"],
 						"error"    => $file["error"],
 						"size"     => $file["size"],
+						"path"     => $file["tmp_name"],
 					);
 					self::checkFile( $errors, $name, $newfile );
 				}
