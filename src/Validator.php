@@ -316,8 +316,8 @@ class Validator {
 	 * Register a new rule
 	 */
 	public static function registerRule( $name, $rule ) {
-		if ( is_callable( $rule, false, $ruleName ) )
-			ValidatorRules::$rules[ $name ] = $ruleName;
+		if ( is_callable( $rule ) )
+			ValidatorRules::$rules[ $name ] = $rule;
 	}
 	/**
 	 * Get the default validation rules
