@@ -39,7 +39,9 @@ class API {
 			$ret = $this->handleNotFound( $req, $res );
 			if ( $ret != null )
 				$res->data( $ret );
-		}	
+		} else if ( $found === null ) {
+			return $res;
+		}
 		if ( $send )
 			$this->sendResponse( $req, $res );
 		return $res;
@@ -72,8 +74,14 @@ class API {
 	    
 		$method      = $req->method();
 		$mainHandler = array( $obj, strtoupper($method).'_' . $functionName );
+		if ( $method === 'OPTIONS' ) {
+			$this->handleOptions( $req, $res );
+			return null;
+		}
 		if ( !$mainHandler || !is_callable( $mainHandler ) )
 			return false;
+
+		$this->handleOptions( $req, $res );
 		
 		// Check for middleware on the current path
 		$handler  = array( $this, "middleware" );
@@ -247,6 +255,9 @@ class API {
 		$res->code( 404 );
 		$res->header( "content-type", "text/text" );
 		$res->raw( "Cannot ".$req->method()." ".$req->uri() );
+	}
+	/// Handle options
+	public function handleOptions( $req, $res ) {
 	}
 	/// Exception handler (May be overwritten)
 	public function handleException( $e, $req, $res ) {
