@@ -22,14 +22,20 @@ class Response {
 		$this->data_ = $data;
 	}
 	/// Set the response as file
-	public function file( $path, $name = null, $inline = true ) {
+	public function file( $path, $name = null, $options = array() ) {
 		$this->raw_  = true;
 		if ( $name == null )
 			$name = basename( $path );
-		$this->headers_['content-disposition'] = ( $inline ? 'inline' : 'attachment' ).'; filename="'.$name.'"';
-		$this->data_ = function() use ( $path ) {
+		$this->headers_['content-disposition'] = ( @$options["inline"] ? 'inline' : 'attachment' ).'; filename="'.$name.'"';
+		$this->data_ = function() use ( $path, $options ) {
 			readfile( $path );
+			if ( @$options["unlink"] )
+				unlink( $path );
 		};
+	}
+	/// Set the response as file
+	public function tmpfile( $path, $name = null, $options = array() ) {
+		return $this->file( $path, $name, array_merge( $options, array( "unlink" => true ) ) );
 	}
 	/// Send a raw data
 	public function raw( $data ) {
