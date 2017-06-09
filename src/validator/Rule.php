@@ -16,12 +16,12 @@ abstract class Rule {
 		if ( is_array( $rule ) )
 		    return self::validateStateObject( $rule, $state, $flags );
 
-		if ( !$state->value ) {
+		if ( $state->value === null ) {
 			if (( $flags & self::FLAG_OPTIONAL ) === 0 )
 				$state->setError();
 			return;
 		}
-		var_dump( $state );
+		$rule->apply( $state );
 	}
 	/**
 	 * Validate the state of an array
