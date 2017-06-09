@@ -7,6 +7,7 @@ class RuleChain extends Rule {
 	
 	public function __call( $method, $args ) {
 		$this->rules[] = RuleSet::get( $method, $args );
+		return $this;
 	}
 
 	public function apply( $state ) {

@@ -6,6 +6,7 @@ class RuleSet {
 	private static $rules   = array(
 		'call'    => '\LibWeb\validator\rule\InlineRule',
 		'arrayOf' => '\LibWeb\validator\rule\ArrayOfRule',
+		'date'    => '\LibWeb\validator\rule\DateTimeRule',
 	);
 
 	/// Inline validators, shortcuts to default php functions
@@ -14,7 +15,15 @@ class RuleSet {
 	public static function get( $name, $args ) {
 		if ( isset( self::$rules[$name] ) ) {
 			$klass = self::$rules[ $name ];
-			return new $klass( ... $args );
+			$setupArgs = null;
+			if ( is_array( $klass ) ) {
+				$setupArgs = $klass;
+				$klass     = array_shift( $setupArgs );
+			}
+			$obj = new $klass( ... $args );
+			if ( $setupArgs )
+				$obj->setup( ...$setupArgs );
+			return $obj;
 		} else if ( isset( self::$inlines[$name] ) ) {
 			return new rule\InlineRule( self::$inlines[$name], $args );
 		} else if ( $name !== 'get' && is_callable( array( __CLASS__, $name ) ) )
@@ -30,15 +39,6 @@ class RuleSet {
 	public static function s( $value ) {
 		return trim( $value );
 	}
-
-	// String value
-	public static function regex( $value, $pattern ) {
-	    $match = preg_match( $pattern, $value );
-		if ( !$match )
-			return false;
-		return true;
-	}
-
 	// Int value
 	public static function intval( $value ) {
 		return self::i( $value );
@@ -93,6 +93,14 @@ class RuleSet {
 		    return new rule\InlineRuleValue( true );
 		else
 			return false;
+	}
+	
+	// String value
+	public static function regex( $value, $pattern ) {
+	    $match = preg_match( $pattern, $value );
+		if ( !$match )
+			return false;
+		return true;
 	}
 
 };

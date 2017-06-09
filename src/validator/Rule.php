@@ -13,14 +13,13 @@ abstract class Rule {
 	 * Validate the state
 	 */
 	public static function validateState( $rule, $state, $flags = 0 ) {
-		if ( is_array( $rule ) )
-		    return self::validateStateObject( $rule, $state, $flags );
-
 		if ( $state->value === null ) {
 			if (( $flags & self::FLAG_OPTIONAL ) === 0 )
 				$state->setError();
 			return;
 		}
+		if ( is_array( $rule ) )
+		    return self::validateStateObject( $rule, $state, $flags );
 		$rule->apply( $state );
 	}
 	/**
