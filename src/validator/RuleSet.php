@@ -3,7 +3,12 @@ namespace LibWeb\validator;
 
 class RuleSet {
 
-	private static $rules   = array();
+	private static $rules   = array(
+		'call'    => '\LibWeb\validator\rule\InlineRule',
+		'arrayOf' => '\LibWeb\validator\rule\ArrayOfRule',
+	);
+
+	/// Inline validators, shortcuts to default php functions
 	private static $inlines = array();
 
 	public static function get( $name, $args ) {
@@ -17,13 +22,24 @@ class RuleSet {
 		else
 			throw new \InvalidArgumentException( "Invalid rule ".$name );
 	}
-	
+
+	// String value
 	public static function strval( $value ) {
 		return self::s( $value );
 	}
 	public static function s( $value ) {
 		return trim( $value );
 	}
+
+	// String value
+	public static function regex( $value, $pattern ) {
+	    $match = preg_match( $pattern, $value );
+		if ( !$match )
+			return false;
+		return true;
+	}
+
+	// Int value
 	public static function intval( $value ) {
 		return self::i( $value );
 	}
@@ -38,6 +54,8 @@ class RuleSet {
 		} else
 			return false;
 	}
+
+	// Float value
 	public static function floatval( $value, $decimal = null ) {
 		return self::f( $value, $decimal );
 	}
@@ -63,7 +81,8 @@ class RuleSet {
 		} else
 			return false;
 	}
-	
+
+	// Boolean value
 	public static function boolean( $value ) {
 		return self::b( $value );
 	}
@@ -75,4 +94,5 @@ class RuleSet {
 		else
 			return false;
 	}
+
 };
