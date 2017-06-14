@@ -33,17 +33,16 @@ class API {
 	}
 	/// Dispatch the requesti
 	public function dispatchRequest( $req, $send = true ) {
-		$res   = new Response;
-		$found = $this->dispatchInternal( $req, $res );
-		if ( $found === false ) {
+		$res    = new Response;
+		$method = $this->dispatchInternal( $req, $res );
+		if ( $method === false ) {
 			$ret = $this->handleNotFound( $req, $res );
 			if ( $ret != null )
 				$res->data( $ret );
-		} else if ( $found === null ) {
-			return $res;
 		}
+		$headersOnly = ($method === 'OPTIONS');
 		if ( $send )
-			$this->sendResponse( $req, $res );
+			$this->sendResponse( $req, $res, $headersOnly );
 		return $res;
 	}
 	/**
@@ -72,15 +71,16 @@ class API {
 			return false;
 		$functionName = $this->resolveFunction( $obj, $paths[ $len - 1 ], $req );
 	    
-		$method      = $req->method();
-		$mainHandler = array( $obj, strtoupper($method).'_' . $functionName );
+		$method = strtoupper( $req->method() );
 		if ( $method === 'OPTIONS' ) {
 			$this->handleOptions( $req, $res );
-			return null;
+			return $method;
 		}
+		$mainHandler = array( $obj, $method.'_' . $functionName );
 		if ( !$mainHandler || !is_callable( $mainHandler ) )
 			return false;
 
+		// Handle options if found
 		$this->handleOptions( $req, $res );
 		
 		// Check for middleware on the current path
@@ -115,7 +115,7 @@ class API {
 			} else if ( $res->getData() )
 				break;
 		}
-		return true;
+		return $method;
 	}
 	/// Resolve a path to a object
 	protected function resolvePath( $path, $rootDir, $rootNamespace ) {
@@ -166,7 +166,7 @@ class API {
 		return $data;
 	}
 	/// Defaults to sending JSON api
-	public function sendResponse( $req, $res ) {
+	public function sendResponse( $req, $res, $headersOnly = false ) {
 		$responseCode = $res->getCode() ?: 200;
 		$headers      = $res->getHeaders();
 		$data         = $res->getData();
@@ -182,6 +182,8 @@ class API {
 		foreach ( $headers as $key => $value ) {
 			header( $key.": ".$value );
 		}
+		if ( $headersOnly )
+			return;
 
 		// Send data
 		if ( $data instanceof \Closure )
@@ -256,7 +258,7 @@ class API {
 		$res->header( "content-type", "text/text" );
 		$res->raw( "Cannot ".$req->method()." ".$req->uri() );
 	}
-	/// Handle options
+	/// Options Handler
 	public function handleOptions( $req, $res ) {
 	}
 	/// Exception handler (May be overwritten)
