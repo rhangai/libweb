@@ -1,5 +1,6 @@
 <?php
 use LibWeb\Validator as v;
+use LibWeb\api\Request;
 
 class ValidatorTest extends PHPUnit\Framework\TestCase
 {
@@ -68,4 +69,32 @@ class ValidatorTest extends PHPUnit\Framework\TestCase
 			[ 100.2 ],
 		];
 	}
+
+
+    
+	public function test_request() {
+		$get = array(
+			"name" => "test",
+			"data" => "16/03",
+		);
+		$post = array();
+		$files = array(
+			"simple" => array(
+				"name"     => array( "simple.txt", "data" ),
+				"tmp_name" => array( "/tmp/simple.txt", "maksd" ),
+				"type"     => array( "text/plain", "maksd" ),
+				"error"    => array( 0, 0 ),
+				"size"     => array( 0, 0 ),
+			),
+		);
+		$server = array();
+		$req = new Request( null, "", "GET", $get, $post, $files, $server );
+		
+		$data = $req->params(array(
+			"name"    => v::s(),
+			"data"    => v::date( "d/m", "Y/m/d" ),
+			"simple"  => v::file(),
+		));
+	}
+
 }
