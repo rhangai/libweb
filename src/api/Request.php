@@ -1,8 +1,10 @@
 <?php
 namespace LibWeb\api;
-
 use LibWeb\Validator as v;
 
+/**
+ * Request class passed to API's $req
+ */
 class Request {
 
 	private $base_;
@@ -15,6 +17,7 @@ class Request {
 
 	private $processedFiles_;
 
+	/// Construct the request
 	public function __construct( $base, $uri, $method, $get, $post, $files, $server ) {
 		$this->base_   = $base;
 		$this->uri_    = parse_url( $uri, PHP_URL_PATH );
@@ -24,12 +27,15 @@ class Request {
 		$this->server_ = $server;
 		$this->files_  = $files;
 	}
-	
+	/// Return an array of validated params
+	public function params( $rules ) {
+		return v::validate( $this, $rules );
+	}
 	public function param( $name, $default = null ) {
-		if ( isset( $this->get_[$name] ) )
-			return $this->get_[$name];
 		if ( isset( $this->post_[$name] ) )
 			return $this->post_[$name];
+		if ( isset( $this->get_[$name] ) )
+			return $this->get_[$name];
 		return $default;
 	}
 
@@ -100,7 +106,9 @@ class Request {
 	}
 
 	private static function checkFile( &$errors, $name, $file ) {
-		if ( $file->error !== 0 ) {
+		if ( !$file->path ) {
+			$errors[$name] = "Invalid file";			
+		} if ( $file->error !== 0 ) {
 			switch( $file->error ) {
 			case UPLOAD_ERR_INI_SIZE:
 				$error = "Max size exceeded";
@@ -110,10 +118,6 @@ class Request {
 			};
 			$errors[$name] = $error;
 		}
-	}
-	
-	public function validateParams( $rules ) {
-		return v::validate( $this, $rules );
 	}
 	public function validatorGet( $key ) {
 		return $this->param( $key );
