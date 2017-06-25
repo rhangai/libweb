@@ -22,9 +22,9 @@ Using the current PHP class in `dir/test/Data.php`
 namespace MyProject\api\test;
 
 class DataAPI {
-	public function GET_one() { /* ... */ }
-	public function POST_two() { /* ... */ }
-	public function GET_myTest() { /* ... */ }
+	public function GET_one( $req, $res ) { /* ... */ }
+	public function POST_two( $req, $res ) { /* ... */ }
+	public function GET_myTest( $req, $res ) { /* ... */ }
 };
 ```
 
@@ -56,3 +56,15 @@ $obj = new MyProject\Base\Namespace\data\User;
 $obj->GET_list();
 ```
 
+Request
+-----------------------------
+
+- `param( $name, $default = null )`
+  Get the parameter of the request. (`$_GET` or `$_POST`)
+  
+- `file( $name = null, $multiple = false )`
+  Get the file identified by `$name` as a file object.
+  If `$name` is null, return the first file found
+  If `$multiple` is true, will return an array of files
+  Obs: `file( true )` is the same as `file( null, true )`
+  
