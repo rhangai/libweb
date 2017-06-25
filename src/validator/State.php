@@ -34,7 +34,7 @@ class State {
 			$this->root     = $this;
 		}
 	}
-	private function getParent() {
+	public function getParent() {
 		return $this->parent;
 	}
 	/// Set the errors
