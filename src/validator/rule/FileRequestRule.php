@@ -1,6 +1,7 @@
 <?php
 namespace LibWeb\validator\rule;
 use LibWeb\validator\Rule;
+use LibWeb\api\Request;
 
 class FileRequestRule extends Rule {
 
