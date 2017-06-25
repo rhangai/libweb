@@ -3,6 +3,7 @@ namespace LibWeb\validator;
 
 class RuleSet {
 
+	// Static rules
 	private static $rules   = array(
 		'call'    => '\LibWeb\validator\rule\InlineRule',
 		'arrayOf' => '\LibWeb\validator\rule\ArrayOfRule',
@@ -13,6 +14,7 @@ class RuleSet {
 	/// Inline validators, shortcuts to default php functions
 	private static $inlines = array();
 
+	/// Get a rule based on the name and the args
 	public static function get( $name, $args ) {
 		if ( isset( self::$rules[$name] ) ) {
 			$klass = self::$rules[ $name ];
@@ -57,8 +59,8 @@ class RuleSet {
 	}
 
 	// Float value
-	public static function floatval( $value, $decimal = null ) {
-		return self::f( $value, $decimal );
+	public static function floatval( $value, $decimal = null, $thousands = null ) {
+		return self::f( $value, $decimal, $thousands );
 	}
 	public static function f( $value, $decimal = null, $thousands = null ) {
 		$error = false;
@@ -96,7 +98,7 @@ class RuleSet {
 			return false;
 	}
 	
-	// String value
+	// Validate against a regex
 	public static function regex( $value, $pattern ) {
 	    $match = preg_match( $pattern, $value );
 		if ( !$match )
