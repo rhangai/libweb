@@ -10,6 +10,7 @@ class State {
 	public $value;
 	public $key;
 	public $error;
+	public $fullKey;
 	private $errorBag;
 	private $parent;
     private $root;
@@ -18,13 +19,14 @@ class State {
 	public function __construct( $value, $key = null, $parent = null ) {
 		$this->initial = $value;
 		$this->value   = $value;
+		$this->key     = $key;
 		if ( $parent ) {
 			$this->parent = $parent;
-			if ( $parent->key ) {
-				$this->key = $parent->key;
-				$this->key[] = $key;
+			if ( $parent->fullKey ) {
+				$this->fullKey   = $parent->fullKey;
+				$this->fullKey[] = $key;
 			} else {
-				$this->key = array( $key );
+				$this->fullKey = array( $key );
 			}
 			$this->root   = $parent->root;
 		} else {
@@ -32,11 +34,14 @@ class State {
 			$this->root     = $this;
 		}
 	}
+	private function getParent() {
+		return $this->parent;
+	}
 	/// Set the errors
 	public function setError( $error = true ) {
 		$this->error = true;
 		$this->root->errorBag[] = (object) array(
-			"key" => $this->key,
+			"key" => $this->fullKey,
 			"error" => $error
 		);
 	}
