@@ -7,6 +7,7 @@ class RuleSet {
 		'call'    => '\LibWeb\validator\rule\InlineRule',
 		'arrayOf' => '\LibWeb\validator\rule\ArrayOfRule',
 		'date'    => '\LibWeb\validator\rule\DateTimeRule',
+		'file'    => '\LibWeb\validator\rule\FileRequestRule',
 	);
 
 	/// Inline validators, shortcuts to default php functions
