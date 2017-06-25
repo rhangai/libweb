@@ -1,6 +1,8 @@
 <?php
 namespace LibWeb\api;
 
+use LibWeb\Validator as v;
+
 class Request {
 
 	private $base_;
@@ -38,9 +40,15 @@ class Request {
 		}
 			
 		$files = $this->files();
-		if ( $name === null )
-			$file = reset( $files );
-		else
+		if ( $name === null ) {
+			$file = null;
+			foreach ( $files as $f ) {
+				if ( $f ) {
+					$file = $f;
+					break;
+				}
+			}
+		} else
 			$file = @$files[ $name ];
 		if ( !$file )
 			return null;
@@ -105,8 +113,11 @@ class Request {
 	}
 	
 	public function validateParams( $rules ) {
+		return v::validate( $this, $rules );
 	}
-
+	public function validatorGet( $key ) {
+		return $this->param( $key );
+	}
 	public function uri() {
 		return $this->uri_;
 	}
