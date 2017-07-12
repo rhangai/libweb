@@ -35,7 +35,11 @@ Methods
   Returns the ID of the inserted element, if applicable
 
 - `transaction( callback $callback )`
+  Start transaction
+  
+  ```php
   DB::transaction ( function () use ($id, $name){
     DB::execute("UPDATE person SET name=:name WHERE id=:id, array( "id" => $id, "name" => $name ) );
-  })
+  });
+  ```
   
