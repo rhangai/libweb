@@ -39,7 +39,7 @@ Methods
   
   ```php
   DB::transaction ( function () use ($id, $name){
-    DB::execute("UPDATE person SET name=:name WHERE id=:id, array( "id" => $id, "name" => $name ) );
+    DB::execute("UPDATE person SET name=:name WHERE id=:id", array( "id" => $id, "name" => $name ) );
   });
   ```
   
