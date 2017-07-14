@@ -60,11 +60,13 @@ Request
 -----------------------------
 
 - `param( $name, $default = null )`
+  
   Get the parameter of the request. (`$_GET` or `$_POST`)
   
 - `file( $name = null, $multiple = false )`
-  Get the file identified by `$name` as a file object.
-  If `$name` is null, return the first file found
-  If `$multiple` is true, will return an array of files
+  
+  Get the file identified by `$name` as a file object. <br />
+  If `$name` is null, return the first file found<br />
+  If `$multiple` is true, will return an array of files<br />
   Obs: `file( true )` is the same as `file( null, true )`
   
