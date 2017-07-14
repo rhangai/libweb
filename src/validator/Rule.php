@@ -7,7 +7,7 @@ class RuleGetterNull {
 class RuleGetterArray {
 	public $ary;
 	public function __construct( $ary ) { $this->ary = $ary; }
-	public function get( $key ) { return @$ary[$key]; }
+	public function get( $key ) { return @$this->ary[$key]; }
 };
 class RuleGetterObject {
 	public $obj;
