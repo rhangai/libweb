@@ -42,6 +42,8 @@ Methods
   Execute a query, normally used for UPDATEs or complex INSERTs
   ```php
   $result = DB::execute("UPDATE person SET name=:name WHERE id=:id", array( "id" => $id, "name" => $name ) );
+  $result->id    // Insert ID
+  $result->count // Rows affected
   ```
   **Returns** An object containing `id` (the id of the insert) and `count` number of affected rows.
 
