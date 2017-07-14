@@ -33,3 +33,23 @@ v::validate( $data, array(
 	)),
 ) );
 ```
+
+Rules
+-------------------------------
+
+  - `s` or `strval`: Convert to string
+  - `i` or `intval`: Convert to int
+  - `f` or `floatval` `($decimal = '.', $thousands = ',')`: Convert to float
+  - `b` or `boolean`: Convert to bool
+  - `call( $fn )`: Calls the $fn on the value
+     ```php
+     // Validate the string 'Bona'
+     v::call(function( $value ) { return $value === 'Bona'; });
+     v::call('trim');          // calls trim( $value );
+     v::call('substr', 0, 20); // calls substr( $value, 0, 20 );
+     ```
+  - `date($format, $out = null)`: Expects a date on the given format
+      ```php
+      v::date( "d/m/Y" ); // Converts 20/03/2017 to a DateTime-like object
+      ```
+   - `arrayOf( $rules )`: Expects an array following the rules
