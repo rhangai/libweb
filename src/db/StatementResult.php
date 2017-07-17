@@ -2,11 +2,13 @@
 
 use \PDO;
 use \PDOException;
+use LibWeb\util\ArrayInterface;
 
 /**
  * Statement result class
  */
-class StatementResult implements \Iterator, \ArrayAccess  {
+class StatementResult implements \Iterator, ArrayInterface {
+	use \LibWeb\util\ArrayTraits;
 	
 	private $stmt_;
 	private $current_;
@@ -47,28 +49,27 @@ class StatementResult implements \Iterator, \ArrayAccess  {
 			return isset($this->cache_[ $this->index_ ]);
 		return !!$this->current_;
 	}
-
-	// Array access
-	public function offsetExists( $offset ) { throw new \LogicException( "Cannot call array methods on a Statement" ); }
-	public function offsetGet( $offset )  { throw new \LogicException( "Cannot call array methods on a Statement" ); }
-	public function offsetSet( $offset, $value ) { throw new \LogicException( "Cannot call array methods on a Statement" ); }
-	public function offsetUnset( $offset ) { throw new \LogicException( "Cannot call array methods on a Statement" ); }
-
-	//
-	public function cacheable() {
-		if ( $this->cache_ )
-			return;
-		if ( $this->index_ !== -1 )
+	// Try to make the function as cache
+	public function cache() {
+		if ( !$this->tryCache() )
 			throw new \Exception( "Cannot cache this query after iterating" );
-		$this->cache_ = iterator_to_array( $this );
+		return $this->cache_;
 	}
-
+	// Cache
+	public function tryCache() {
+		if ( $this->cache_ )
+			return true;
+		if ( $this->index_ !== -1 )
+			return false;
+		$this->cache_ = iterator_to_array( $this );
+		return true;
+	}
 	// Inspect
 	public function __debugInfo() {
-		$this->cacheable();
+		$this->tryCache();
 		return array(
 			"query"   => $this->stmt_->queryString,
-			"results" => $this->cache_,
+			"results" => $this->cache_ === null ? "[Not cached]" : $this->cache_,
 		);
 	}
 }
