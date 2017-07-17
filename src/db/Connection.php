@@ -70,7 +70,7 @@ class Connection {
 		$values = array_values( $data );
 		$query = "INSERT INTO ".$table.$fields." VALUES (". implode(',', array_fill(0, count( $values ), '?')).")";
 
-		$stmt = $this->prepareExecuteQuery( $query, $data );
+		$stmt = $this->prepareExecuteQuery( $query, $values );
 		return $this->db->lastInsertId();
 	}
 	/**
