@@ -36,11 +36,14 @@ class RuleSet {
 	}
 
 	// String value
-	public static function strval( $value ) {
-		return self::s( $value );
+	public static function strval( $value, $trim = true ) {
+		return self::s( $value, $trim );
 	}
-	public static function s( $value ) {
-		return trim( $value );
+	public static function s( $value, $trim = true ) {
+		if ( $trim !== false )
+			return trim( $value );
+		else
+			return strval( $value );
 	}
 	// Int value
 	public static function intval( $value ) {
@@ -105,5 +108,17 @@ class RuleSet {
 			return false;
 		return true;
 	}
-
+	
+	// Check against a set
+	public static function set( $value, $ary ) {
+		return in_array( $value, $ary );
+	}
+	
+	// Map the value to another one
+	public static function map( $value, $map ) {
+		$value = @$map[$value];
+		if ( $value === null )
+			return false;
+		return $value;
+	}
 };
