@@ -2,12 +2,11 @@
 
 use \PDO;
 use \PDOException;
-use LibWeb\util\ArrayInterface;
 
 /**
  * Statement result class
  */
-class StatementResult implements \Iterator, ArrayInterface {
+class StatementResult implements \Iterator, \ArrayAccess {
 	use \LibWeb\util\ArrayTraits;
 	
 	private $stmt_;
@@ -64,6 +63,18 @@ class StatementResult implements \Iterator, ArrayInterface {
 		$this->cache_ = iterator_to_array( $this );
 		return true;
 	}
+
+	// Array access
+	public function offsetExists ( $offset ) {
+		$this->cache();
+		return isset( $this->cache_[ $offset ] );
+	}
+	public function offsetGet ( $offset ) {
+		$this->cache();
+		return $this->cache_[ $offset ];
+	}
+	public function offsetSet( $offset, $value ) { throw new \LogicException( "Cannot set an element on a Result Object. Try map." ); }
+	public function offsetUnset( $offset ) { throw new \LogicException( "Cannot unset an element on a Result Object. Try filter." ); }
 	// Inspect
 	public function __debugInfo() {
 		$this->tryCache();
