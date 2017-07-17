@@ -41,15 +41,27 @@ Rules
   - `i` or `intval`: Convert to int
   - `f` or `floatval` `($decimal = '.', $thousands = ',')`: Convert to float
   - `b` or `boolean`: Convert to bool
+  - `set( $ary )`: Validate if the value is in the given set
+```php
+v::set(["MALE", "FEMALE"]);
+```
+  
+  - `map( $ary )`: Map keys to values
+```php
+v::map([
+  "M" => "Male", 
+  "F" => "Female",
+]);
+```
   - `call( $fn )`: Calls the $fn on the value
-     ```php
-     // Validate the string 'Bona'
-     v::call(function( $value ) { return $value === 'Bona'; });
-     v::call('trim');          // calls trim( $value );
-     v::call('substr', 0, 20); // calls substr( $value, 0, 20 );
-     ```
+```php
+// Validate the string 'Bona'
+v::call(function( $value ) { return $value === 'Bona'; });
+v::call('trim');          // calls trim( $value );
+v::call('substr', 0, 20); // calls substr( $value, 0, 20 );
+```
   - `date($format, $out = null)`: Expects a date on the given format
-      ```php
-      v::date( "d/m/Y" ); // Converts 20/03/2017 to a DateTime-like object
-      ```
-   - `arrayOf( $rules )`: Expects an array following the rules
+```php
+v::date( "d/m/Y" ); // Converts 20/03/2017 to a DateTime-like object
+```
+  - `arrayOf( $rules )`: Expects an array following the rules
