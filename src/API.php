@@ -4,6 +4,8 @@ namespace LibWeb;
 use LibWeb\api\Response;
 use LibWeb\api\Request;
 use LibWeb\api\ExceptionNotFound;
+use LibWeb\util\ArrayInterface;
+
 
 class API {
     private $rootNamespace;
@@ -217,7 +219,7 @@ class API {
 			else
 				$isObject = true;
 		} else if ( is_object( $obj ) ) {
-			if ( $obj instanceof \ArrayAccess )
+			if ( ( $obj instanceof \ArrayAccess ) || ( $obj instanceof ArrayInterface ) )
 				$isArray  = true;
 			else
 				$isObject = true;
