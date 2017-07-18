@@ -5,7 +5,7 @@ class RuleSet {
 
 	// Static rules
 	private static $rules   = array(
-		'call'    => '\LibWeb\validator\rule\InlineRule',
+		'call'    => '\LibWeb\validator\rule\CallRule',
 		'arrayOf' => '\LibWeb\validator\rule\ArrayOfRule',
 		'date'    => '\LibWeb\validator\rule\DateTimeRule',
 		'file'    => '\LibWeb\validator\rule\FileRequestRule',
