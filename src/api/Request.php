@@ -26,6 +26,12 @@ class Request {
 		$this->post_   = $post;
 		$this->server_ = $server;
 		$this->files_  = $files;
+
+		if ( @$server["CONTENT_TYPE"] === "application/json" ) {
+			$data = json_decode( @file_get_contents( "php://input" ) );
+			if ( $data )
+				$this->post_ = array_merge( $this->post_, ( array ) $data );
+		}
 	}
 	/// Return an array of validated params
 	public function params( $rules ) {
