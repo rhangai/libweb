@@ -90,6 +90,11 @@ class API {
 		if ( is_callable( $handler ) )
 			$preHandlers[] = $handler;
 		
+		// Check for middleware on the current object
+		$handler  = array( $obj, "middleware" );
+		if ( is_callable( $handler ) )
+			$preHandlers[] = $handler;
+		
 		// Check for middlewares on the path
 		for ( $i = 0; $i < $len - 1; ++$i ) {
 			$path   = array_slice( $paths, 0, $i );
