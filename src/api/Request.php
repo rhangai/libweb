@@ -33,6 +33,11 @@ class Request {
 			$data = json_decode( @file_get_contents( "php://input" ) );
 			if ( $data )
 				$this->post_ = array_merge( $this->post_, ( array ) $data );
+		} else if ( isset($this->post_["_json"] ) ) {
+			$data = json_decode( base64_decode( $this->post_["_json"] ) );
+			unset($this->post_["_json"] );
+			if ( $data )
+				$this->post_ = array_merge( $this->post_, ( array ) $data );
 		}
 	}
 	/// Return an array of validated params
