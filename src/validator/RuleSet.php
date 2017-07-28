@@ -121,4 +121,47 @@ class RuleSet {
 			return false;
 		return $value;
 	}
+
+
+
+	// String rules
+	public static function len( $value, $min, $max = null ) {
+		$len = strlen( $value );
+		if ( $max === null )
+			return ($len === $min);
+		else if ( ( $len > $max ) && ( $max > 0 ) )
+			return false;
+		else if ( $len < $min )
+			return false;
+		return true;
+	}
+	public static function str_replace( $value, $search, $replace ) {
+		return str_replace( $search, $replace, $value );
+	}
+	public static function preg_replace( $value, $search, $replace ) {
+		if ( is_string( $replace ) )
+			return preg_replace( $search, $replace, $value );
+		else if ( is_callable( $replace ) )
+			return preg_replace_callback( $search, $replace, $value );
+		else
+			return false;
+	}
+	public static function blacklist( $value, $chars ) {
+		$out = array();
+		for ( $i = 0, $len = strlen( $value ); $i < $len; ++$i ) {
+			$c = $value[ $i ];
+			if ( strpos( $chars, $c ) === false )
+				$out[] = $c;
+		}
+		return implode( "", $out );
+	}
+	public static function whitelist( $value, $chars ) {
+		$out = array();
+		for ( $i = 0, $len = strlen( $value ); $i < $len; ++$i ) {
+			$c = $value[ $i ];
+			if ( strpos( $chars, $c ) !== false )
+				$out[] = $c;
+		}
+		return implode( "", $out );
+	}
 };
