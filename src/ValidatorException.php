@@ -9,7 +9,6 @@ class ValidatorException extends \Exception {
 		$this->state   = $state;
 		$this->errors  = $errors;
 
-
 		$msg = "Invalid fields: \n";
 		foreach ( $errors as $field ) {
 			if ( $field->key ) {
@@ -23,7 +22,7 @@ class ValidatorException extends \Exception {
 	}
 
 	public function serializeAPI() {
-		return $this->state ? $this->state->errors : null;
+		return $this->state ? array( "type" => "validator", "fields" => $this->errors ) : null;
 	}
 	
 };
