@@ -51,4 +51,12 @@ class Response {
 		$name = strtolower( trim( $name ) );
 		$this->headers_[ $name ] = $value;
 	}
+	/// Set a cookie
+	public function cookie( $name, $value, $expiresAfter = null ) {
+		if ( $expiresAfter === null )
+			$expires = 0;
+		else if ( is_int( $expiresAfter ) )
+			$expires = time() + $expiresAfter;
+		setcookie( $name, $value, $expires, "/", "", false, true );
+	}
 };
