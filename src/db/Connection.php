@@ -6,11 +6,13 @@ use \PDOException;
 class Connection {
 	private $db;
 	private $options;
+	private $inTransaction;
 	/**
 	 * Construct the PDO connection
 	 */
 	public function __construct( $db ) {
 		$this->db = $db;
+		$this->inTransaction = false;
 	}
 	// Get the internal PDO object
 	public function getPDO() { return $this->db; }
@@ -112,11 +114,17 @@ class Connection {
 	 */
 	public function transaction( $cb ) {
 		$db = $this->db;
+		if ( $this->inTransaction )
+			return call_user_func( $cb, $db );
+		
 		$db->beginTransaction();
+		$this->inTransaction = true;
 		try {
 			$ret = call_user_func( $cb, $db );
+			$this->inTransaction = false;
 			$db->commit();
 		} catch( \Exception $e ) {
+			$this->inTransaction = false;
 			$db->rollback();
 			throw $e;
 		}
