@@ -8,6 +8,7 @@ class Connection {
 	private $options;
 	private $inTransaction;
 	private $lastQuery;
+	private $debugMode;
 	/**
 	 * Construct the PDO connection
 	 */
@@ -18,6 +19,14 @@ class Connection {
 	}
 	// Get the internal PDO object
 	public function getPDO() { return $this->db; }
+	/// Enables debug mode on this connection
+	public function enableDebug() {
+		if ( !$this->debugMode ) {
+			$this->debugMode = true;
+			if ( !$this->inTransaction )
+				$this->db->beginTransaction();
+		}
+	}
 	/**
 	 * Prepare and execute a query
 	 */
@@ -39,19 +48,15 @@ class Connection {
 		$result = $stmt->fetch( PDO::FETCH_OBJ );
 		$stmt->closeCursor();
 		if ( !$result )
-			throw new \RuntimeException( "Query did not return anything. '".$this->lastQuery."'" );
+			throw new \RuntimeException( "Query did not return anything. '".$query."' with data ".print_r( $data, true ) );
 		return $result;
 	}
 	/**
 	 * Fetch a single object
 	 */
-	public function fetchOne( $query, $data = null, $options = null ) {
+	public function fetchOne( $query, $data = null ) {
 		$stmt = $this->prepareExecuteQuery( $query, $data );
-		if ( !$options ) {
-			$result = $stmt->fetch( PDO::FETCH_OBJ );
-		} else {
-			$result = $stmt->fetch( $fetchMode, $fetchArg );
-		}
+		$result = $stmt->fetch( PDO::FETCH_OBJ );
 		$stmt->closeCursor();
 		return $result;
 	}
@@ -121,7 +126,7 @@ class Connection {
 		$stmt  = $this->prepareExecuteQuery( $query, $values );
 	    $count = $stmt->rowCount();
 		if ( $count != 1 )
-			throw new \RuntimeException( "Query '".$query."' updated more then a row" );
+			throw new \RuntimeException( "Query '".$this->lastQuery."' updated more then a row" );
 	}
 	/**
 	 * Create a transaction
@@ -130,16 +135,19 @@ class Connection {
 		$db = $this->db;
 		if ( $this->inTransaction )
 			return call_user_func( $cb, $db );
-		
-		$db->beginTransaction();
+
+		if ( !$this->debugMode )
+			$db->beginTransaction();
 		$this->inTransaction = true;
 		try {
 			$ret = call_user_func( $cb, $db );
 			$this->inTransaction = false;
-			$db->commit();
+			if ( !$this->debugMode )
+				$db->commit();
 		} catch( \Exception $e ) {
 			$this->inTransaction = false;
-			$db->rollback();
+		    if ( !$this->debugMode )
+				$db->rollback();
 			throw $e;
 		}
 		return $ret;
