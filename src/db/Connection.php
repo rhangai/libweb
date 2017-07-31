@@ -74,6 +74,40 @@ class Connection {
 		return $this->db->lastInsertId();
 	}
 	/**
+	 * Update exactly one match
+	 */
+	public function updateOne( $table, $condition, $data ) {
+		$db		= $this->db;
+		$table	= $this->quoteIdentifier( $table );
+
+		$condition = is_object($condition) ? ((array)$condition) : $condition;
+		if ( !is_array( $condition ) || ( count($condition) <= 0 ) )
+			throw new \InvalidArgumentException( "Invalid condition. Must be non empty array or object." );
+		
+		$data	= is_object($data) ? ((array)$data) : $data;
+		if ( !is_array($data) )
+			throw new \InvalidArgumentException( "Invalid data. Must be array or object." );
+
+
+		$fields = array();
+		$values = array();
+		foreach ( $data as $field => $value ) {
+			$fields[] = $this->quoteIdentifier( $field ).' = ?';
+			$values[] = $value;
+		}
+		foreach ( $where as $field => $value ) {
+			$where[]  = $this->quoteIdentifier( $field ).' = ?';
+			$values[] = $value;
+		}
+		
+		$query = "UPDATE ".$table." SET ".implode( " ", $fields )." WHERE ".implode( " ", $where );
+		
+		$stmt  = $this->prepareExecuteQuery( $query, $values );
+	    $count = $stmt->rowCount();
+		if ( $count != 1 )
+			throw new \RuntimeException( "Query '".$query."' updated more then a row" );
+	}
+	/**
 	 * Create a transaction
 	 */
 	public function transaction( $cb ) {
