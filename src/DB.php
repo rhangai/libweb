@@ -32,6 +32,10 @@ class DB {
 		$db = static::instance();
 		return $db->insertInto( $table, $data );
 	}
+	public static function updateOne( $table, $condition, $data ) {
+		$db = static::instance();
+		return $db->updateOne( $table, $condition, $data );
+	}
 	public static function transaction( $cb ) {
 		$db = static::instance();
 		return $db->transaction( $cb );
