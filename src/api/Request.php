@@ -162,6 +162,10 @@ class Request {
 	public function method() {
 		return $this->method_;
 	}
+	/// Create the response for this request
+	public function createResponse() {
+		return new Response;
+	}
 	
 	public static function createFromGlobals( $base = null, $uri = null, $method = null ) {
 		if ( $uri === null )

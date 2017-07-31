@@ -33,9 +33,9 @@ class API {
 		$req = Request::createFromGlobals( $base, $uri, $method );
 		return $this->dispatchRequest( $req );
 	}
-	/// Dispatch the requesti
+	/// Dispatch the request
 	public function dispatchRequest( $req, $send = true ) {
-		$res    = new Response;
+		$res    = $req->createResponse();
 		$method = $this->dispatchInternal( $req, $res );
 		if ( $method === false ) {
 			$ret = $this->handleNotFound( $req, $res );
