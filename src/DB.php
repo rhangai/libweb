@@ -16,13 +16,21 @@ class DB {
 		);
 	}
 
-	public static function fetchOne( $query, $data = null, $options = null ) {
+	public static function enableDebug() {
 		$db = static::instance();
-		return $db->fetchOne( $query, $data, $options );
+		return $db->enableDebug();
 	}
-	public static function fetchAll( $query, $data = null, $options = null ) {
+	public static function ensureOne( $query, $data = null ) {
 		$db = static::instance();
-		return $db->fetchAll( $query, $data, $options );
+		return $db->ensureOne( $query, $data );
+	}
+	public static function fetchOne( $query, $data = null ) {
+		$db = static::instance();
+		return $db->fetchOne( $query, $data );
+	}
+	public static function fetchAll( $query, $data = null ) {
+		$db = static::instance();
+		return $db->fetchAll( $query, $data );
 	}
 	public static function execute( $query, $data = null ) {
 		$db = static::instance();
