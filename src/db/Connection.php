@@ -7,12 +7,14 @@ class Connection {
 	private $db;
 	private $options;
 	private $inTransaction;
+	private $lastQuery;
 	/**
 	 * Construct the PDO connection
 	 */
 	public function __construct( $db ) {
 		$this->db = $db;
 		$this->inTransaction = false;
+		$this->lastQuery     = null;
 	}
 	// Get the internal PDO object
 	public function getPDO() { return $this->db; }
@@ -20,6 +22,7 @@ class Connection {
 	 * Prepare and execute a query
 	 */
 	private function prepareExecuteQuery( $query, $data = null ) {
+		$this->lastQuery = $query;
 		if ( $data != null ) {
 			$stmt = $this->db->prepare( $query );
 			$stmt->execute( $data );
@@ -27,6 +30,17 @@ class Connection {
 		} else {
 			return $this->db->query( $query );
 		}
+	}
+	/**
+	 * Ensure a single object is fetched.
+	 */
+	public function ensureOne( $query, $data = null ) {
+		$stmt = $this->prepareExecuteQuery( $query, $data );
+		$result = $stmt->fetch( PDO::FETCH_OBJ );
+		$stmt->closeCursor();
+		if ( !$result )
+			throw new \RuntimeException( "Query did not return anything. '".$this->lastQuery."'" );
+		return $result;
 	}
 	/**
 	 * Fetch a single object
