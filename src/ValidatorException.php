@@ -2,26 +2,27 @@
 
 class ValidatorException extends \Exception {
 
-	private $state;
+	private $errors;
 	private $fields;
 	
-	public function __construct( $state, $fields = null ) {
-		$this->state  = $state ? ((object) $state) : null;
-		$this->fields = $fields;
-		$fields_str = '';
-		if ( $fields ) {
-			$fields_str = ' on fields '.implode( ',', array_map(function($f) { return '"'.$f.'"'; }, $fields ) );
-		}
+	public function __construct( $state, $errors ) {
+		$this->state   = $state;
+		$this->errors  = $errors;
 
-		$error_message = '';
-		if ( $this->state && $this->state->errors ) {
-			$error_message = "\n".json_encode( $this->state->errors, JSON_PRETTY_PRINT );
+		$msg = "Invalid fields: \n";
+		foreach ( $errors as $field ) {
+			if ( $field->key ) {
+				$msg .= "    ".implode(".", $field->key)." => ".( $field->error === true ? "Error" : $field->error )."\n";
+			} else {
+				$msg .= "    ".( $field->error === true ? "Error" : $field->error )."\n";
+			}
 		}
-		parent::__construct( "Validation error".$fields_str.$error_message );
+		
+		parent::__construct( $msg );
 	}
 
 	public function serializeAPI() {
-		return $this->state ? $this->state->errors : null;
+		return $this->state ? array( "type" => "validator", "fields" => $this->errors ) : null;
 	}
 	
 };
