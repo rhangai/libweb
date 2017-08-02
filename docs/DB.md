@@ -17,6 +17,15 @@ Methods
   ```
   **Returns** `NULL` or an `object` with the properties
   
+- `ensureOne( $query, $data )`
+
+  Just like fetchOne but does not allow `null` as return.
+  ```php
+  // throws if no rows are found
+  $row = DB::ensureOne( "SELECT * FROM person WHERE id=?", array( 10 ) );
+  ```
+  **Returns** `object` with the properties  
+  
 - `fetchAll( $query, $data )`
 
   Selects all row from the database that matches the query.
@@ -36,6 +45,15 @@ Methods
   ));
   ```
   **Returns** The ID of the inserted element, if applicable
+  
+- `updateOne( $query, $data = null )`
+
+  Ensure only one row is updated
+  ```php
+  // Throws if no rows or more than one rows are updated
+  DB::updateOne( "UPDATE table SET name='test' WHERE id=?", array( 10 ) );
+  ```
+  **Returns** nothing
   
 - `execute( $query, $data = null )`
 
