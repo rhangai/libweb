@@ -26,9 +26,10 @@ abstract class Rule {
 	 * Validate the state
 	 */
 	public static function validateState( $rule, $state, $flags = 0 ) {
-		if ( $state->value === null ) {
+		if ( ( $state->value === null ) || ( $state->value === '' ) ) {
 			if (( $flags & self::FLAG_OPTIONAL ) === 0 )
 				$state->setError( "Field is not optional" );
+			$state->value = null;
 			return;
 		}
 		if ( is_array( $rule ) )
