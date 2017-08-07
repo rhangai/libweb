@@ -90,8 +90,16 @@ class Connection {
 		$fields = '('.implode( ',', array_map( array( $this, 'quoteIdentifier' ), array_keys( $data ) ) ).')';
 		$values = array_values( $data );
 		$query = "INSERT INTO ".$table.$fields." VALUES (". implode(',', array_fill(0, count( $values ), '?')).")";
+		
+		$stmt = $this->db->prepare( $query );
 
-		$stmt = $this->prepareExecuteQuery( $query, $values );
+		$i = 1;
+		foreach( $values as $value ) {
+			$stmt->bindValue( $i, $value, static::getPDOType( $value ) );
+			++$i;
+		}
+		$stmt->execute();
+		//$stmt = $this->prepareExecuteQuery( $query, $values );
 		return $this->db->lastInsertId();
 	}
 	/**
@@ -156,5 +164,11 @@ class Connection {
 	// Quote identifier
 	public function quoteIdentifier( $identifier ) {
 		return "`".str_replace( "`", "``", $identifier )."`";
+	}
+	// Get PDO insert type
+	public static function getPDOType( $value ) {
+		if ( is_resource($value) )
+			return PDO::PARAM_LOB;
+		return PDO::PARAM_STR;
 	}
 }
