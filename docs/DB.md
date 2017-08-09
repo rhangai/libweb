@@ -79,3 +79,10 @@ Methods
   
   **Returns** The value returned inside the transaction
   
+- `enableDebug()`
+
+  Starts a transaction that is never commited.
+  Allows for the script to mock some insertions and rollbacks at the end.
+  
+
+  
