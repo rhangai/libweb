@@ -9,6 +9,14 @@ class ArrayIteratorMap extends ArrayIteratorBase {
 			$this->callback_ = function( $value ) use ( $callback ) { return $value->{$callback}; };
 		else if ( is_callable( $callback ) )
 			$this->callback_ = $callback;
+		else if ( is_array( $callback ) )
+			$this->callback_ = function( $item ) use( $callback ) {
+				$ret = array();
+				foreach ( $callback as $newkey => $oldkey ) {
+					$ret[$newkey] = $item->{$oldkey};
+				}
+				return (object) $ret;
+			};
 		else
 			throw new \InvalidArgumentException( "Callback for map must be a string or a callable" );
 	}
