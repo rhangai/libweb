@@ -9,10 +9,15 @@ trait ArrayTraits {
 		return new ArrayIteratorFilter( $this, $cb );
 	}
 	function whitelist( $list ) {
-		$cb = function( $item ) use ( $list ) {
+		$isWhitelisted = array();
+		foreach ( $list as $key )
+			$isWhitelisted[ $key ] = true;
+		$cb = function( $item ) use ( $isWhitelisted ) {
 			$ret = array();
-			foreach ( $list as $key )
-				$ret[$key] = $item->{$key};
+			foreach ( $item as $key => $value ) {
+				if ( @$isWhitelisted[ $key ] )
+					$ret[$key] = $value;
+			}
 			return (object) $ret;
 		};
 		return new ArrayIteratorMap( $this, $cb );
@@ -21,7 +26,7 @@ trait ArrayTraits {
 		$isBlacklisted = array();
 		foreach ( $list as $key )
 			$isBlacklisted[ $key ] = true;
-		$cb = function( $item ) use ( $list ) {
+		$cb = function( $item ) use ( $isBlacklisted ) {
 			$ret = array();
 			foreach ( $item as $key => $value ) {
 				if ( !@$isBlacklisted[ $key ] )
