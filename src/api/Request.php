@@ -42,6 +42,7 @@ class Request {
 	}
 	/// Return an array of validated params
 	public function params( $rules ) {
+		$this->files();
 		return v::validate( $this, $rules );
 	}
 	public function param( $name, $default = null ) {
@@ -149,7 +150,10 @@ class Request {
 	}
 	/// Use with validator directly
 	public function validatorGet( $key ) {
-		return $this->param( $key );
+		$param = $this->param( $key );
+		if ( $param !== null )
+			return $param;
+		return @$this->processedFiles_[ $key ];
 	}
 	public function uri() {
 		return $this->uri_;
