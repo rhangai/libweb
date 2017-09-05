@@ -13,6 +13,10 @@ class Validator {
 		return $state->value;
 	}
 
+	// Add a new inline rule
+	public static function addInlineRule( $name, $rule ) {
+		validator\RuleSet::addInlineRule( $name, $rule );
+	}
 	/// This method will cal
 	public static function __callStatic( $method, $args ) {
 		$chain = new validator\RuleChain;

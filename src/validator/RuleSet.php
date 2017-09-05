@@ -34,7 +34,10 @@ class RuleSet {
 		else
 			throw new \InvalidArgumentException( "Invalid rule ".$name );
 	}
-
+	// Add a new inline rule
+	public static function addInlineRule( $name, $rule ) {
+		self::$inlines[ $name ] = $rule;
+	}
 	// String value
 	public static function strval( $value, $trim = true ) {
 		return self::s( $value, $trim );
