@@ -78,6 +78,15 @@ class Connection {
 		);
 	}
 	/**
+	 * Execute a query assuring only one row will be updated
+	 */
+	public function executeOne( $query, $data = null ) {
+		$result = $this->execute( $query, $data );
+		if ( $result->count != 1 )
+			throw new \RuntimeException( "Query '".$this->lastQuery."' updated more then a row" );
+		return $result;
+	}
+	/**
 	 * Insert a data on a given table
 	 */
 	public function insertInto( $table, $data ) {

@@ -36,6 +36,10 @@ class DB {
 		$db = static::instance();
 		return $db->execute( $query, $data );
 	}
+	public static function executeOne( $query, $data = null ) {
+		$db = static::instance();
+		return $db->executeOne( $query, $data );
+	}
 	public static function insertInto( $table, $data ) {
 		$db = static::instance();
 		return $db->insertInto( $table, $data );
