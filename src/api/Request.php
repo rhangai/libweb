@@ -15,6 +15,7 @@ class Request {
 	private $files_;
 	private $server_;
 	private $cookies_;
+	private $data_;
 
 	private $processedFiles_;
 
@@ -28,6 +29,7 @@ class Request {
 		$this->files_   = $files;
 		$this->server_  = $server;
 		$this->cookies_ = $cookies;
+		$this->data_    = array();
 
 		if ( @$server["CONTENT_TYPE"] === "application/json" ) {
 			$data = json_decode( @file_get_contents( "php://input" ) );
@@ -173,6 +175,14 @@ class Request {
 			$uri = '/'.substr( $uri, $len );
 		}
 		return $uri;
+	}
+
+	// User data
+	public function data( $key ) {
+		return @$this->data_[ $key ];
+	}
+	public function setData( $key, $value ) {
+		$this->data_[ $key ] = $value;
 	}
 
 
