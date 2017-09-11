@@ -155,13 +155,26 @@ class Request {
 			return $param;
 		return @$this->processedFiles_[ $key ];
 	}
+	// Get the full request URI
 	public function uri() {
 		return $this->uri_;
 	}
-
 	public function base() {
 		return $this->base_;
 	}
+	// Get the relative request URI
+	public function relativeUri() {
+		$uri   = $this->uri();
+		$base  = $this->base();
+		if ( $base ) {
+			$len = strlen( $base );
+			if ( substr( $uri, 0, $len ) !== $base )
+				return false;
+			$uri = '/'.substr( $uri, $len );
+		}
+		return $uri;
+	}
+
 
 	public function method() {
 		return $this->method_;
