@@ -65,3 +65,45 @@ Rules
      v::date( "d/m/Y" ); // Converts 20/03/2017 to a DateTime-like object
      ```
   - `arrayOf( $rules )`: Expects an array following the rules
+  
+  - `len( $min, $max = null )`
+  - `minlen( $min )`
+  - `str_replace( string $search, string $replace )`
+  - `preg_replace( string $search, string|function $replace )`
+  - `whitelist( array $chars )`
+  - `blacklist( array $chars )`
+  
+  
+Flags
+-------------------------------------------
+
+  - `?` Optional flag:   ( The field will only be validated if non-empty )
+  - `??` Skippable flag: ( The field will only be validated if non-empty and will NOT be on the output )
+  
+    ```php
+	$data = array(
+		"name"  => "John Foo",
+		"age"   => 32,
+		"job"   => "Developer",
+		"email" => "johnfoo@bar.com",
+	);
+	$validated = v::validate( $data, array(
+		"name"      => v::s(),
+		"age"       => v::i(),
+		"job?"      => v::s(),
+		"company?"  => v::s(),
+		"email??"   => v::s(),
+		"address??" => v::s(),
+	) );
+	
+    /*
+		stdClass(
+			name    => "John Foo"
+			age     => 32
+			job     => "Developer"
+			company => null
+			email   => "johnfoo@Bar.com"
+		)
+		// No address field as it is skipabble, company was injected because only optional
+	*/
+	```
