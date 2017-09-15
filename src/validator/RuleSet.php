@@ -138,6 +138,12 @@ class RuleSet {
 			return false;
 		return true;
 	}
+	public static function minlen( $value, $min ) {
+		$len = strlen( $value );
+	    if ( $len < $min )
+			return false;
+		return true;
+	}
 	public static function str_replace( $value, $search, $replace ) {
 		return str_replace( $search, $replace, $value );
 	}
