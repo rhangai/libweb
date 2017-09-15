@@ -129,16 +129,17 @@ class Connection {
 
 		$fields = array();
 		$values = array();
+		$where  = array();
 		foreach ( $data as $field => $value ) {
 			$fields[] = $this->quoteIdentifier( $field ).' = ?';
 			$values[] = $value;
 		}
-		foreach ( $where as $field => $value ) {
+		foreach ( $condition as $field => $value ) {
 			$where[]  = $this->quoteIdentifier( $field ).' = ?';
 			$values[] = $value;
 		}
 		
-		$query = "UPDATE ".$table." SET ".implode( " ", $fields )." WHERE ".implode( " ", $where );
+		$query = "UPDATE ".$table." SET ".implode( ", ", $fields )." WHERE ".implode( " AND ", $where );
 		
 		$stmt  = $this->prepareExecuteQuery( $query, $values );
 	    $count = $stmt->rowCount();
