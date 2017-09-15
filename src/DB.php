@@ -52,6 +52,11 @@ class DB {
 		$db = static::instance();
 		return $db->transaction( $cb );
 	}
+	public static function quoteIdentifier( $what ) {
+		$db = static::instance();
+		return $db->quoteIdentifier( $what );
+	}
+
 	
 	// Instance
 	private static $instances = array();
