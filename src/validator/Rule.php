@@ -19,7 +19,8 @@ class RuleGetterObject {
  */
 abstract class Rule {
 
-	const FLAG_OPTIONAL = 0x01;
+	const FLAG_OPTIONAL  = 0x01;
+	const FLAG_SKIPPABLE = 0x02;
 	/// Apply a rule
 	abstract public function apply( $state );
 	/**
@@ -61,12 +62,21 @@ abstract class Rule {
 			$childFlags = 0;
 			$keyLen = strlen( $key );
 			if ( $key[ $keyLen - 1 ] === '?' ) {
-				$childFlags |= self::FLAG_OPTIONAL;
-				$key		 = substr( $key, 0, $keyLen - 1 );
-			}
+			    if ( $key[ $keyLen - 2 ] === '?' ) {
+					$childFlags |= self::FLAG_SKIPPABLE | self::FLAG_OPTIONAL;
+					$key		 = substr( $key, 0, $keyLen - 2 );
+				} else {
+					$childFlags |= self::FLAG_OPTIONAL;
+					$key		 = substr( $key, 0, $keyLen - 1 );
+				}
+			} 
 			
 			$childState = new State( $getter->get( $key ), $key, $state );
 			self::validateState( $rule, $childState, $childFlags );
+			if ( $childFlags & self::FLAG_SKIPPABLE ) {
+				if ( $childState->value === null )
+					continue;
+			}
 			$result[ $key ] = $childState->value;
 		}
 		$state->value = (object) $result;
