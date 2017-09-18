@@ -8,11 +8,21 @@ class DB {
 
 	/// Protected connection
 	protected static function createConnection( $options = array() ) {
+		$options = (array) $options;
+
+		// Merge PDO options
+		$pdoOptions = array(
+			PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+			PDO::MYSQL_ATTR_FOUND_ROWS => true,
+		);
+		if ( is_array( @$options['options'] ) )
+			$pdoOptions += $options['options'];
+		
 		return new PDO(
 			@$options['url'] ?: Config::get( 'PDO.url' ),
 			@$options['user'] ?: Config::get( 'PDO.user' ),
 			@$options['password'] ?: Config::get( 'PDO.password' ),
-			array( PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION )
+			$pdoOptions
 		);
 	}
 
