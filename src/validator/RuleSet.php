@@ -182,8 +182,18 @@ class RuleSet {
 	/// Brazilian CPF validator
 	public static function cpf( $cpf ) {
 		$cpf = preg_replace('/[^0-9]/', '', (string) $cpf);
+
 		// Valida tamanho
 		if (strlen($cpf) != 11)
+			return false;
+		$all_equals = true;
+		for ( $i = 1; $i<11; ++$i ) {
+			if ( $cpf[$i] !== $cpf[$i-1] ) {
+				$all_equals = false;
+				break;
+			}
+		}
+		if ( $all_equals )
 			return false;
 		// Calcula e confere primeiro dígito verificador
 		for ($i = 0, $j = 10, $soma = 0; $i < 9; $i++, $j--)
@@ -204,6 +214,15 @@ class RuleSet {
 		$cnpj = preg_replace('/[^0-9]/', '', (string) $cnpj);
 		// Valida tamanho
 		if (strlen($cnpj) != 14)
+			return false;
+		$all_equals = true;
+		for ( $i = 1; $i<14; ++$i ) {
+			if ( $cnpj[$i] !== $cnpj[$i-1] ) {
+				$all_equals = false;
+				break;
+			}
+		}
+		if ( $all_equals )
 			return false;
 		// Valida primeiro dígito verificador
 		for ($i = 0, $j = 5, $soma = 0; $i < 12; $i++)
