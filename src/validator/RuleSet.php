@@ -195,7 +195,9 @@ class RuleSet {
 		for ($i = 0, $j = 11, $soma = 0; $i < 10; $i++, $j--)
 			$soma += $cpf{$i} * $j;
 		$resto = $soma % 11;
-		return $cpf{10} == ($resto < 2 ? 0 : 11 - $resto);
+		if ( $cpf{10} != ($resto < 2 ? 0 : 11 - $resto) )
+			return false;
+		return $cpf;
 	}
 	// Brazilian CNPJ validator
 	public static function cnpj( $cnpj ) {
@@ -219,7 +221,9 @@ class RuleSet {
 			$j = ($j == 2) ? 9 : $j - 1;
 		}
 		$resto = $soma % 11;
-		return $cnpj{13} == ($resto < 2 ? 0 : 11 - $resto);
+		if ( $cnpj{13} != ($resto < 2 ? 0 : 11 - $resto) )
+			return false;
+		return $cnpj;
 	}
 
 
