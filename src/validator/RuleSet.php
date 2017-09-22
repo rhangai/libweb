@@ -179,32 +179,71 @@ class RuleSet {
 		return filter_var( $email, FILTER_VALIDATE_EMAIL );
 	}
 
-	// Brazilian CPF validator
+	/// Brazilian CPF validator
 	public static function cpf( $cpf ) {
-		$cpf = preg_replace( "/[^0-9]/", "", $cpf );
-		if ( strlen( $cpf ) !== 11 )
-			return false;
+		$cpf = preg_replace('/[^0-9]/', '', (string) $cpf);
 
-		$allSame = true;
-		$first = $cpf[0];
-		for ( $i = 1; $i < 11; ++$i ) {
-			if ( $cpf[$i] !== $first ) {
-				$allSame = false;
+		// Valida tamanho
+		if (strlen($cpf) != 11)
+			return false;
+		$all_equals = true;
+		for ( $i = 1; $i<11; ++$i ) {
+			if ( $cpf[$i] !== $cpf[$i-1] ) {
+				$all_equals = false;
 				break;
 			}
 		}
-		if ( $allSame )
+		if ( $all_equals )
 			return false;
-		for ($t = 9; $t < 11; $t++) {             
-            for ($d = 0, $c = 0; $c < $t; $c++) {
-                $d += $cpf[$c] * (($t + 1) - $c);
-            }
-            $d = ((10 * $d) % 11) % 10;
-            if ($cpf[$c] != $d) {
-                return false;
-            }
-        }
+		// Calcula e confere primeiro dígito verificador
+		for ($i = 0, $j = 10, $soma = 0; $i < 9; $i++, $j--)
+			$soma += $cpf{$i} * $j;
+		$resto = $soma % 11;
+		if ($cpf{9} != ($resto < 2 ? 0 : 11 - $resto))
+			return false;
+		// Calcula e confere segundo dígito verificador
+		for ($i = 0, $j = 11, $soma = 0; $i < 10; $i++, $j--)
+			$soma += $cpf{$i} * $j;
+		$resto = $soma % 11;
+		if ( $cpf{10} != ($resto < 2 ? 0 : 11 - $resto) )
+			return false;
 		return $cpf;
 	}
+	// Brazilian CNPJ validator
+	public static function cnpj( $cnpj ) {
+		$cnpj = preg_replace('/[^0-9]/', '', (string) $cnpj);
+		// Valida tamanho
+		if (strlen($cnpj) != 14)
+			return false;
+		$all_equals = true;
+		for ( $i = 1; $i<14; ++$i ) {
+			if ( $cnpj[$i] !== $cnpj[$i-1] ) {
+				$all_equals = false;
+				break;
+			}
+		}
+		if ( $all_equals )
+			return false;
+		// Valida primeiro dígito verificador
+		for ($i = 0, $j = 5, $soma = 0; $i < 12; $i++)
+		{
+			$soma += $cnpj{$i} * $j;
+			$j = ($j == 2) ? 9 : $j - 1;
+		}
+		$resto = $soma % 11;
+		if ($cnpj{12} != ($resto < 2 ? 0 : 11 - $resto))
+			return false;
+		// Valida segundo dígito verificador
+		for ($i = 0, $j = 6, $soma = 0; $i < 13; $i++)
+		{
+			$soma += $cnpj{$i} * $j;
+			$j = ($j == 2) ? 9 : $j - 1;
+		}
+		$resto = $soma % 11;
+		if ( $cnpj{13} != ($resto < 2 ? 0 : 11 - $resto) )
+			return false;
+		return $cnpj;
+	}
+
 
 };
