@@ -98,7 +98,7 @@ class RuleSet {
 	public static function b( $value ) {
 		if ( !$value || ($value === 'false') )
 		    return new rule\InlineRuleValue( false );
-		else if ( ( $value === true ) || ( $value === 'true' ) || ( $value === '1' ) )
+		else if ( ( $value === true ) || ( $value === 'true' ) || ( $value == '1' ) )
 		    return new rule\InlineRuleValue( true );
 		else
 			return false;
