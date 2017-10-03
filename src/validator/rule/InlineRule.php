@@ -39,7 +39,7 @@ class InlineRule extends Rule {
 			$state->setError( $ret );
 		else if ( $ret instanceof InlineRuleValue )
 			$state->value = $ret->value;
-		else if ( $ret && $ret !== true )
+		else if ( ( $ret !== true ) && ( $ret !== null ) )
 			$state->value = $ret;
 	}
 
