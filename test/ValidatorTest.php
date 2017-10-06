@@ -88,7 +88,7 @@ class ValidatorTest extends PHPUnit\Framework\TestCase
 			),
 		);
 		$server = array();
-		$req = new Request( null, "", "GET", $get, $post, $files, $server );
+		$req = new Request( null, "", "GET", $get, $post, $files, $server, array() );
 		
 		$data = $req->params(array(
 			"name"    => v::s(),
