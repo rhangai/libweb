@@ -28,7 +28,7 @@ class DateTimeRule extends Rule {
 	public function apply( $state ) {
 		$value = $state->value;
 		if ( is_string( $value ) ) {
-			$value = \DateTime::createFromFormat( $this->format, $value );
+			$value = \DateTime::createFromFormat( '!'.$this->format, $value );
 			if ( $value === false ) {
 				$state->setError( "Invalid date" );
 				return;
