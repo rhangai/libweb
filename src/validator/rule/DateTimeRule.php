@@ -20,7 +20,9 @@ class DateTimeRule extends Rule {
 	private $format;
 	private $out;
 	
-	public function __construct( $format, $out = null ) {
+	public function __construct( $format = null, $out = null ) {
+		if ( $format === null )
+		    $format = array( "Y-m-d H:i:s", "Y-m-d" );
 		$this->format  = $format;
 		$this->out     = $out;
 	}
@@ -28,12 +30,8 @@ class DateTimeRule extends Rule {
 	public function apply( $state ) {
 		$value = $state->value;
 		if ( is_string( $value ) ) {
-			$value = \DateTime::createFromFormat( '!'.$this->format, $value );
+			$value = self::tryParse( $value, $this->format );
 			if ( $value === false ) {
-				$state->setError( "Invalid date" );
-				return;
-			}
-			if ( $value->format( $this->format ) !== $state->value ){
 				$state->setError( "Invalid date" );
 				return;
 			}
@@ -46,6 +44,24 @@ class DateTimeRule extends Rule {
 		$newtime->setTimestamp( $value->getTimestamp() );
 		$newtime->setOutputFormat( $this->out );
 		$state->value = $newtime;
+	}
+	
+	private static function tryParse( $value, $format ) {
+		if ( is_array( $format ) ) {
+			foreach ( $format as $item ) {
+				$result = self::tryParse( $value, $item );
+				if ( $result !== false )
+					return $result;
+			}
+			return false;
+		}
+		
+		$value = \DateTime::createFromFormat( '!'.$format, $value );
+		if ( $value === false )
+			return false;
+		if ( $value->format( $format ) !== $state->value )
+			return false;
+		return $value;
 	}
 	
 };
