@@ -79,14 +79,20 @@ class RuleSet {
 		    return true;
 		} else if ( is_string( $value ) ) {
 			$value = trim( $value );
+			$isNegative = ( @$value[0] === '-' );
+			if ( $isNegative )
+				$value = substr( $value, 1 );
 			if ( $thousands )
 				$value = str_replace( $thousands, "", $value );
-			if ( ctype_digit( $value ) )
-				return intval( $value, 10 );
+			if ( ctype_digit( $value ) ) {
+				$value = intval( $value, 10 );
+				return $isNegative ? -$value : $value;
+			}
 			$split = explode( $decimal, $value );
 			if ( ( count($split) != 2 ) || ( !ctype_digit( $split[0] ) ) || ( !ctype_digit( $split[1] ) ) )
 				return false;
-			return $decimal === '.' ? floatval( $value ) : floatval( $split[0].'.'.$split[1] );
+			$value = ( $decimal === '.' ) ? floatval( $value ) : floatval( $split[0].'.'.$split[1] );
+			return $isNegative ? -$value : $value;
 		} else
 			return false;
 	}
@@ -104,6 +110,28 @@ class RuleSet {
 			return false;
 	}
 	
+	// Decimal value
+	public static function decimal( $value, $digits, $decimalSeparator = null, $thousandsSeparator = null ) {
+		if ( !is_int( $digits ) || ( $digits < 0 ) )
+			throw new \InvalidArgumentException( "Decimal precision must be a positive integral or 0." );
+		
+		if ( $decimalSeparator === null )
+			$decimalSeparator = '.';
+
+		if ( is_string( $value ) ) {
+			if ( $thousandsSeparator )
+				$value = str_replace( $thousandsSeparator, "", $value );
+			if ( $decimalSeparator !== '.' ) {
+				$value = str_replace( '.', "#.", $value );
+				$value = str_replace( $decimalSeparator, '.', $value );
+			}
+			$decimal = \RtLopez\Decimal::create( $value, $digits );
+		} else {
+			$decimal = \RtLopez\Decimal::create( $value, $digits );
+		}
+		return $decimal;
+	}
+
 	// Validate against a regex
 	public static function regex( $value, $pattern ) {
 	    $match = preg_match( $pattern, $value );
