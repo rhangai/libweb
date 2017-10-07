@@ -163,14 +163,32 @@ class API {
 	/// Format the response
 	public function formatResponse( $status, $data, $errorType, $req, $res ) {
 		if ( $data instanceof \Exception ) {
-			if ( $data && is_callable( array( $data, "serializeAPI" ) ) )
+			if ( is_callable( array( $data, "serializeAPI" ) ) )
 				return $data->serializeAPI();
+			else if ( Config::get( "debug" ) ) {
+				return $this->debugFormatException( $data );
+			}
 			return null;
 		}
 		
 		if ( is_object( $data) && is_callable( array( $data, "serializeAPI" ) ) )
 			$data = $data->serializeAPI();
 		return $data;
+	}
+	// Make a debugable interface
+	public function debugFormatException( $exception ) {
+		$previous = $exception->getPrevious();
+		$previous = ($previous instanceof \Exception) ? $this->debugFormatException( $previous ) : null;
+		return array(
+			"code"     => $exception->getCode(),
+			"message"  => $exception->getMessage(),
+			"file"     => $exception->getFile(),
+			"line"     => $exception->getLine(),
+			"trace"    => $exception->getTrace(),
+			"previous" => $previous,
+			"_obj"     => $exception,
+			"_str"     => $exception->__toString(),
+		);
 	}
 	/// Defaults to sending JSON api
 	public function sendResponse( $req, $res, $headersOnly = false ) {
