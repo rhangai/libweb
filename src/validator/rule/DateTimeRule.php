@@ -56,12 +56,12 @@ class DateTimeRule extends Rule {
 			return false;
 		}
 		
-		$value = \DateTime::createFromFormat( '!'.$format, $value );
-		if ( $value === false )
+		$result = \DateTime::createFromFormat( '!'.$format, $value );
+		if ( $result === false )
 			return false;
-		if ( $value->format( $format ) !== $state->value )
+		if ( $result->format( $format ) !== $value )
 			return false;
-		return $value;
+		return $result;
 	}
 	
 };
