@@ -1,6 +1,7 @@
 <?php
 use LibWeb\Validator as v;
 use LibWeb\api\Request;
+use RtLopez\Decimal;
 
 class ValidatorTest extends PHPUnit\Framework\TestCase
 {
@@ -20,6 +21,8 @@ class ValidatorTest extends PHPUnit\Framework\TestCase
 			[ 100.01, "100.01" ],
 			[ 100.01, "100.01" ],
 			[ 123123.12, "123123,12", "," ],
+			[ -100.01, "-100.01" ],
+			[ -123123.12, "-123123,12", "," ],
 		];
 	}
 	/**
@@ -31,6 +34,43 @@ class ValidatorTest extends PHPUnit\Framework\TestCase
 		v::validate( $v, v::floatval( $decimal ) );
 	}
 	public function floatval_fail_provider() {
+		return [
+			[ "xupiqs" ],
+			[ "MKAMSD" ],
+			[ "1000.2", "," ],
+		];
+	}
+	
+	/**
+	 *  @dataProvider decimal_provider
+	 */
+	public function test_decimal( $precision, $expected, $v, $decimal = null ) {
+		$expected = Decimal::create( $expected, $precision );
+		$v        = v::validate( $v, v::decimal( $precision, $decimal ) );
+		$this->assertTrue( $expected->eq( $v ), "Expected $expected. Got $v" );
+	}
+	public function decimal_provider() {
+		return [
+			[ 2, "0.00", "0" ],
+			[ 10, "0.0000000000", "0" ],
+			[ 2, "100.00", 100 ],
+			[ 10, "100.0000000000", 100 ],
+			[ 2, "100.00", "100" ],
+			[ 2, "100.01", "100.01" ],
+			[ 2, "-100.01", "-100.01" ],
+			[ 2, "123123.12", "123123,12", "," ],
+			[ 10, "12391823.1230000000", "12391823,123", "," ],
+			[ 10, "-12391823.1230000000", "-12391823,123", "," ],
+		];
+	}
+	/**
+	 *  @expectedException \LibWeb\ValidatorException
+	 *  @dataProvider decimal_fail_provider
+	 */
+	public function test_decimal_fail( $v, $decimal = null ) {
+		v::validate( $v, v::decimal( 2, $decimal ) );
+	}
+	public function decimal_fail_provider() {
 		return [
 			[ "xupiqs" ],
 			[ "MKAMSD" ],
