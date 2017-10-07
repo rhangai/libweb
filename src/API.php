@@ -163,31 +163,36 @@ class API {
 	/// Format the response
 	public function formatResponse( $status, $data, $errorType, $req, $res ) {
 		if ( $data instanceof \Exception ) {
-			if ( is_callable( array( $data, "serializeAPI" ) ) )
-				return $data->serializeAPI();
-			else if ( Config::get( "debug" ) ) {
-				return $this->debugFormatException( $data );
+			$error = array();
+			if ( $errorType !== null )
+				$error["type"] = $errorType;
+			if ( is_callable( array( $data, "serializeAPI" ) ) ) {
+				$errorData = $data->serializeAPI();
+				if ( $errorData !== null )
+					$error["data"] = $errorData;
 			}
-			return null;
+		    if ( Config::get( "debug" ) )
+				$error['$debug'] = $this->debugFormatException( $data );
+			return $error ?: null;
 		}
 		
 		if ( is_object( $data) && is_callable( array( $data, "serializeAPI" ) ) )
 			$data = $data->serializeAPI();
 		return $data;
 	}
-	// Make a debugable interface
+	// Make a debugable interface for an exception
 	public function debugFormatException( $exception ) {
 		$previous = $exception->getPrevious();
 		$previous = ($previous instanceof \Exception) ? $this->debugFormatException( $previous ) : null;
 		return array(
-			"code"     => $exception->getCode(),
-			"message"  => $exception->getMessage(),
-			"file"     => $exception->getFile(),
-			"line"     => $exception->getLine(),
-			"trace"    => $exception->getTrace(),
-			"previous" => $previous,
-			"_obj"     => $exception,
-			"_str"     => $exception->__toString(),
+			"code"      => $exception->getCode(),
+			"message"   => $exception->getMessage(),
+			"file"      => $exception->getFile(),
+			"line"      => $exception->getLine(),
+			"trace"     => $exception->getTraceAsString(),
+			"previous"  => $previous,
+			"exception" => $exception->__toString(),
+			'$obj'      => $exception,
 		);
 	}
 	/// Defaults to sending JSON api
