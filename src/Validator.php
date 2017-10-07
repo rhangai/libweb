@@ -3,13 +3,15 @@ namespace LibWeb;
 
 class Validator {
 	
-	public static function validate( $value, $rule ) {
+	public static function validate( $value, $rule, $options = array() ) {
+		if ( ( $options === true ) || ( $options === false ) )
+			$options = array( "serializable" => $options );
 		$state = new validator\State( $value );
 		validator\Rule::validateState( $rule, $state );
 
 		$errors = $state->errors();
 		if ( $errors )
-			throw new ValidatorException( $state, $errors );
+			throw new ValidatorException( $state, $errors, @$options["serializable"] );
 		return $state->value;
 	}
 
