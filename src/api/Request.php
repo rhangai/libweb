@@ -45,14 +45,32 @@ class Request {
 	/// Return an array of validated params
 	public function params( $rules ) {
 		$this->files();
-		return v::validate( $this, $rules );
+		return v::validate( $this, $rules, true );
 	}
-	public function param( $name, $default = null ) {
-		if ( isset( $this->post_[$name] ) )
-			return $this->post_[$name];
-		if ( isset( $this->get_[$name] ) )
-			return $this->get_[$name];
-		return $default;
+	/// Return a parameter
+	public function param( $name, $default = null, $validator = null ) {
+		$optional = true;
+		if ( $validator === null ) {
+			if ( $default instanceof \LibWeb\validator\Rule ) {
+				$validator = $default;
+				$default = null;
+				$optional = false;
+			}
+		}
+
+	    if ( isset( $this->get_[$name] ) ) 
+			$value = $this->get_[$name];
+		else if ( isset( $this->post_[$name] ) )
+			$value = $this->post_[$name];
+		else {
+			$value = $default;
+			if ( $optional )
+				return $value;
+		}
+		
+		if ( $validator )
+			$value = v::validate( array( $name => $value ), array( $name => $validator ), true )->{$name};
+		return $value;
 	}
 	// Get a cookie
 	public function cookie( $name, $default = null ) {
