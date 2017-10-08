@@ -83,7 +83,7 @@ class Debug {
 	}
 
 	public static function collect() {
-		if ( self::$debugbar !== null )
+		if ( self::$debugbar )
 			self::$debugbar->collect();
 	}
 	public static function collectException( $exception ) {
