@@ -45,9 +45,10 @@ class ValidatorTest extends PHPUnit\Framework\TestCase
 	 *  @dataProvider decimal_provider
 	 */
 	public function test_decimal( $precision, $expected, $v, $decimal = null ) {
-		$expected = Decimal::create( $expected, $precision );
-		$v        = v::validate( $v, v::decimal( $precision, $decimal ) );
-		$this->assertTrue( $expected->eq( $v ), "Expected $expected. Got $v" );
+		$expectedDecimal = Decimal::create( $expected, $precision );
+		$valueDecimal    = v::validate( $v, v::decimal( $precision, $decimal ) );
+		$this->assertTrue( $expectedDecimal->eq( $valueDecimal ), "Expected $expectedDecimal. Got $valueDecimal" );
+		$this->assertSame( $expected, $valueDecimal->__toString() );
 	}
 	public function decimal_provider() {
 		return [
