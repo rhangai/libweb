@@ -8,13 +8,13 @@ use LibWeb\util\ArrayInterface;
 
 
 class API {
-    private $rootNamespace;
-    private $rootDir;
+	private $rootNamespace;
+	private $rootDir;
 	private $ignoreFiles;
 	/// Construct the API
 	public function __construct( $namespace = null, $dir = null ) {
 		$this->rootNamespace = $namespace;
-		$this->rootDir       = $dir;
+		$this->rootDir		 = $dir;
 	}
 	/// Add a few ignore files
 	public function addIgnore( $ignoreFiles ) {
@@ -35,7 +35,7 @@ class API {
 	}
 	/// Dispatch the request
 	public function dispatchRequest( $req, $send = true ) {
-		$res    = $req->createResponse();
+		$res	= $req->createResponse();
 		$method = $this->dispatchInternal( $req, $res );
 		if ( $method === false ) {
 			$ret = $this->handleNotFound( $req, $res );
@@ -59,6 +59,9 @@ class API {
 				return false;
 			$uri = '/'.substr( $uri, $len );
 		}
+
+		if ( Config::get( "debug" ) )
+			$this->handleDebug( $req, $res, $uri );
 		
 		$paths = array_values( array_filter( explode( "/", $uri ) ) );
 		$len   = count( $paths );
@@ -67,12 +70,12 @@ class API {
 
 
 		
-		$path    = array_slice( $paths, 0, $len - 1 );
-	    $obj     = $this->resolvePath( $path, $this->rootDir, $this->rootNamespace );
+		$path	 = array_slice( $paths, 0, $len - 1 );
+		$obj	 = $this->resolvePath( $path, $this->rootDir, $this->rootNamespace );
 		if ( !$obj )
 			return false;
 		$functionName = $this->resolveFunction( $obj, $paths[ $len - 1 ], $req );
-	    
+		
 		$method = strtoupper( $req->method() );
 		if ( $method === 'OPTIONS' ) {
 			$this->handleOptions( $req, $res );
@@ -97,24 +100,24 @@ class API {
 		
 		// Check for middlewares on the path
 		for ( $i = 0; $i < $len - 1; ++$i ) {
-			$path   = array_slice( $paths, 0, $i );
+			$path	= array_slice( $paths, 0, $i );
 			$path[] = "_Parent";
-			$obj    = $this->resolvePath( $path, $this->rootDir, $this->rootNamespace );
+			$obj	= $this->resolvePath( $path, $this->rootDir, $this->rootNamespace );
 			if ( $obj ) {
-			    $handler = array( $obj, "middleware" );
+				$handler = array( $obj, "middleware" );
 				if ( is_callable( $handler ) )
 					$preHandlers[] = $handler;
 			}
 		}
 
 		// Call handlers
-		$handlers   = $preHandlers;
+		$handlers	= $preHandlers;
 		$handlers[] = $mainHandler;
 		foreach( $handlers as $handler ) {
 			try {
 				$ret = call_user_func( $handler, $req, $res );
 			} catch( \Exception $e ) {
-			    $ret = $this->handleException( $e, $req, $res );
+				$ret = $this->handleException( $e, $req, $res );
 			}
 			if ( $ret != null ) {
 				$res->data( $ret );
@@ -128,7 +131,7 @@ class API {
 	protected function resolvePath( $path, $rootDir, $rootNamespace ) {
 		if ( !$path )
 			return $this;
-	    $path[ count($path) - 1 ] = API::_toPascalCase( $path[ count($path) - 1 ], true );
+		$path[ count($path) - 1 ] = API::_toPascalCase( $path[ count($path) - 1 ], true );
 		$file = implode( "/", $path ).".php";
 		if ( $rootDir )
 			$file = $rootDir."/".$file;
@@ -171,7 +174,7 @@ class API {
 				if ( $errorData !== null )
 					$error["data"] = $errorData;
 			}
-		    if ( Config::get( "debug" ) )
+			if ( Config::get( "debug" ) )
 				$error['$debug'] = $this->debugFormatException( $data );
 			return $error ?: null;
 		}
@@ -185,25 +188,28 @@ class API {
 		$previous = $exception->getPrevious();
 		$previous = ($previous instanceof \Exception) ? $this->debugFormatException( $previous ) : null;
 		return array(
-			"code"      => $exception->getCode(),
-			"message"   => $exception->getMessage(),
-			"file"      => $exception->getFile(),
-			"line"      => $exception->getLine(),
-			"trace"     => $exception->getTraceAsString(),
-			"previous"  => $previous,
+			"code"		=> $exception->getCode(),
+			"message"	=> $exception->getMessage(),
+			"file"		=> $exception->getFile(),
+			"line"		=> $exception->getLine(),
+			"trace"		=> $exception->getTraceAsString(),
+			"previous"	=> $previous,
 			"exception" => $exception->__toString(),
-			'$obj'      => $exception,
+			'$obj'		=> $exception,
 		);
 	}
 	/// Defaults to sending JSON api
 	public function sendResponse( $req, $res, $headersOnly = false ) {
 		$responseCode = $res->getCode() ?: 200;
-		$headers      = $res->getHeaders();
-		$data         = $res->getData();
-		$raw          = $res->getRaw();
+		$headers	  = $res->getHeaders();
+		$data		  = $res->getData();
+		$raw		  = $res->getRaw();
 		
 		// Status of the response
 		$status = $responseCode === 200 ? "success" : "error";
+
+		// 
+		Debug::collect();
 
 		// Send headers
 		http_response_code( $responseCode );
@@ -248,7 +254,7 @@ class API {
 			$firstKey = key( $obj );
 			end( $obj );
 			$lastKey  = key( $obj );
-			$size     = count( $obj );
+			$size	  = count( $obj );
 			if ( ( $firstKey === 0 ) && ( $lastKey === ( $size-1 ) ) )
 				$isArray = true;
 			else
@@ -302,8 +308,10 @@ class API {
 	}
 	/// Exception handler (May be overwritten)
 	public function handleException( $e, $req, $res ) {
-		if ( $e instanceof \Exception )
+		if ( $e instanceof \Exception ) {
 			error_log( $e );
+			Debug::collectException( $e );
+		}
 		
 		if ( $e instanceof \LibWeb\APIException ) {
 			$res->code( $e->getCode() );
@@ -312,6 +320,21 @@ class API {
 			$res->code( 500 );
 			$res->data( $e );
 		}
+	}
+
+	public function handleDebug( $req, $res, $uri ) {
+		if ( $uri === '/_debug.js' )
+			Debug::dumpJs( $req->base() );
+		else if ( $uri === '/_debug.css' )
+			Debug::dumpCss();
+		else if ( $uri === '/_debug.handler' )
+			Debug::dumpHandler();
+		else if ( self::_strStartsWith( $uri, "/_debug/fontawesome-webfont" ) )
+			Debug::dumpFontAwesome( $uri );
+	}
+
+	private static function _strStartsWith( $str, $other ) {
+		return (substr( $str, 0, strlen( $other ) ) === $other );
 	}
 	
 };
