@@ -18,12 +18,16 @@ class DB {
 		if ( is_array( @$options['options'] ) )
 			$pdoOptions += $options['options'];
 		
-		return new PDO(
+		$pdo = new PDO(
 			@$options['url'] ?: Config::get( 'PDO.url' ),
 			@$options['user'] ?: Config::get( 'PDO.user' ),
 			@$options['password'] ?: Config::get( 'PDO.password' ),
 			$pdoOptions
 		);
+
+		$pdo = Debug::wrapPDO( $pdo );
+		
+		return $pdo;
 	}
 
 	public static function enableDebug() {
@@ -66,14 +70,21 @@ class DB {
 		$db = static::instance();
 		return $db->quoteIdentifier( $what );
 	}
+	public static function isSingleton() {
+		return false;
+	}
 
 	
 	// Instance
 	private static $instances = array();
 	public static function instance() {
-		$k = get_called_class();
-		if ( !@self::$instances[ $k ] )
-			self::$instances[ $k ]	= new Connection( static::createConnection() );
-		return self::$instances[ $k ];
+		Debug::_setup();
+		
+		$k = '_';
+		if ( static::isSingleton() )
+			$k = get_called_class();
+		if ( !@DB::$instances[ $k ] )
+			@DB::$instances[ $k ]	= new Connection( static::createConnection() );
+		return DB::$instances[ $k ];
 	}
 }
