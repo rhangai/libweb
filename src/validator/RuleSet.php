@@ -125,9 +125,9 @@ class RuleSet {
 				$value = str_replace( '.', "#.", $value );
 				$value = str_replace( $decimalSeparator, '.', $value );
 			}
-			$decimal = \RtLopez\Decimal::create( $value, $digits );
+			$decimal = new impl\Decimal( $value, $digits );
 		} else {
-			$decimal = \RtLopez\Decimal::create( $value, $digits );
+			$decimal = new impl\Decimal( $value, $digits );
 		}
 		return $decimal;
 	}
