@@ -111,9 +111,9 @@ class RuleSet {
 	}
 	
 	// Decimal value
-	public static function decimal( $value, $digits, $decimalSeparator = null, $thousandsSeparator = null ) {
-		if ( !is_int( $digits ) || ( $digits < 0 ) )
-			throw new \InvalidArgumentException( "Decimal precision must be a positive integral or 0." );
+	public static function decimal( $value, $digits, $decimal, $decimalSeparator = null, $thousandsSeparator = null ) {
+		if ( !is_int( $decimal ) || ( $decimal < 0 ) )
+			throw new \InvalidArgumentException( "Decimal precision must be a positive integral or 0. $decimal given" );
 		
 		if ( $decimalSeparator === null )
 			$decimalSeparator = '.';
@@ -125,11 +125,19 @@ class RuleSet {
 				$value = str_replace( '.', "#.", $value );
 				$value = str_replace( $decimalSeparator, '.', $value );
 			}
-			$decimal = new impl\Decimal( $value, $digits );
+			$value = new impl\Decimal( $value, $decimal );
 		} else {
-			$decimal = new impl\Decimal( $value, $digits );
+			$value = new impl\Decimal( $value, $decimal );
 		}
-		return $decimal;
+
+		$integralDigits = $digits - $decimal;
+		$max = \RtLopez\Decimal::create( '10', $decimal )->pow( $integralDigits );
+		$min = $max->mul( -1 );
+		if ( $value->ge( $max ) || $value->le( $min ) )
+			return false;
+		
+		
+		return $value;
 	}
 
 	// Validate against a regex

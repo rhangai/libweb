@@ -44,24 +44,24 @@ class ValidatorTest extends PHPUnit\Framework\TestCase
 	/**
 	 *  @dataProvider decimal_provider
 	 */
-	public function test_decimal( $precision, $expected, $v, $decimal = null ) {
+	public function test_decimal( $digits, $precision, $expected, $v, $decimal = null ) {
 		$expectedDecimal = Decimal::create( $expected, $precision );
-		$valueDecimal    = v::validate( $v, v::decimal( $precision, $decimal ) );
+		$valueDecimal    = v::validate( $v, v::decimal( $digits, $precision, $decimal ) );
 		$this->assertTrue( $expectedDecimal->eq( $valueDecimal ), "Expected $expectedDecimal. Got $valueDecimal" );
 		$this->assertSame( $expected, $valueDecimal->__toString() );
 	}
 	public function decimal_provider() {
 		return [
-			[ 2, "0.00", "0" ],
-			[ 10, "0.0000000000", "0" ],
-			[ 2, "100.00", 100 ],
-			[ 10, "100.0000000000", 100 ],
-			[ 2, "100.00", "100" ],
-			[ 2, "100.01", "100.01" ],
-			[ 2, "-100.01", "-100.01" ],
-			[ 2, "123123.12", "123123,12", "," ],
-			[ 10, "12391823.1230000000", "12391823,123", "," ],
-			[ 10, "-12391823.1230000000", "-12391823,123", "," ],
+			[ 20, 2, "0.00", "0" ],
+			[ 20, 10, "0.0000000000", "0" ],
+			[ 20, 2, "100.00", 100 ],
+			[ 20, 10, "100.0000000000", 100 ],
+			[ 20, 2, "100.00", "100" ],
+			[ 20, 2, "100.01", "100.01" ],
+			[ 20, 2, "-100.01", "-100.01" ],
+			[ 20, 2, "123123.12", "123123,12", "," ],
+			[ 20, 10, "12391823.1230000000", "12391823,123", "," ],
+			[ 20, 10, "-12391823.1230000000", "-12391823,123", "," ],
 		];
 	}
 	/**
@@ -69,13 +69,17 @@ class ValidatorTest extends PHPUnit\Framework\TestCase
 	 *  @dataProvider decimal_fail_provider
 	 */
 	public function test_decimal_fail( $v, $decimal = null ) {
-		v::validate( $v, v::decimal( 2, $decimal ) );
+		v::validate( $v, v::decimal( 10, 2, $decimal ) );
 	}
 	public function decimal_fail_provider() {
 		return [
 			[ "xupiqs" ],
 			[ "MKAMSD" ],
 			[ "1000.2", "," ],
+			[ "100000000.00" ],
+			[ "-100000000.00" ],
+			[ "-1238912839.00" ],
+			[ "12391209312.00" ],
 		];
 	}
 	
