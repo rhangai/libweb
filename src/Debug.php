@@ -2,6 +2,34 @@
 namespace LibWeb;
 
 /**
+ * DebugExeption collector
+ */
+class DebugExceptonsCollector extends \DebugBar\DataCollector\ExceptionsCollector {
+	
+	public function formatThrowableData($e)
+	{
+		$fileinfo = is_callable( array( $e, "serializeFile" ) ) ? $e->serializeFile() : array( "file" => $e->getFile(), "line" => $e->getLine() );
+		$filePath = $fileinfo["file"];
+		$line     = $fileinfo["line"];
+		if ($filePath && file_exists($filePath)) {
+			$lines = file($filePath);
+			$start = $line - 4;
+			$lines = array_slice($lines, $start < 0 ? 0 : $start, 7);
+		} else {
+			$lines = array("Cannot open the file ($filePath) in which the exception occurred ");
+		}
+		return array(
+			'type' => get_class($e),
+			'message' => $e->getMessage(),
+			'code' => $e->getCode(),
+			'file' => $filePath,
+			'line' => $line,
+			'surrounding_lines' => $lines
+		);
+	}
+};
+
+/**
  * Debug class using php-debugbar
  */
 class Debug {
@@ -9,23 +37,34 @@ class Debug {
 	private static $debugbar = null;
 	private static $renderer = null;
 	
-    public static function _setup() {
+	public static function _setup() {
 		if ( self::$debugbar !== null )
 			return !!self::$debugbar;
 		if ( !Config::get( "debug" ) ) {
 			self::$debugbar = false;
 			return false;
 		}
-		$debugbar = new \DebugBar\StandardDebugBar;
+		$debugbar = new \DebugBar\DebugBar;
 		$renderer = $debugbar->getJavascriptRenderer();
 		
 		self::$debugbar = $debugbar;
 		self::$renderer = $renderer;
 
+		// Standard collector
+		$debugbar->addCollector( new \DebugBar\DataCollector\PhpInfoCollector() );
+		$debugbar->addCollector( new \DebugBar\DataCollector\MessagesCollector() );
+		$debugbar->addCollector( new \DebugBar\DataCollector\RequestDataCollector() );
+		$debugbar->addCollector( new \DebugBar\DataCollector\TimeDataCollector() );
+		$debugbar->addCollector( new \DebugBar\DataCollector\MemoryCollector() );
+		$debugbar->addCollector( new DebugExceptonsCollector() );
+		
+		// Config collector
+		$debugbar->addCollector( new \DebugBar\DataCollector\ConfigCollector( Config::raw() ) );
+
+		// PDO collector
 		$pdo = DB::instance()->getPDO();
 		if ( $pdo instanceof \DebugBar\DataCollector\PDO\TraceablePDO )
 			$debugbar->addCollector( new \DebugBar\DataCollector\PDO\PDOCollector( $pdo ) );
-		$debugbar->addCollector( new \DebugBar\DataCollector\ConfigCollector( Config::raw() ) );
 
 		// Set storage
 		$storage = new \DebugBar\Storage\FileStorage( sys_get_temp_dir() . DIRECTORY_SEPARATOR . "php-debugbar" );
@@ -56,7 +95,7 @@ class Debug {
 
 	public static function dumpJs( $base ) {
 		if ( self::_setup() ) {
-		    header( "content-type: text/javascript" );
+			header( "content-type: text/javascript" );
 			self::$renderer->setOpenHandlerUrl( $base.'_debug.handler' );
 			self::$renderer->dumpJsAssets();
 
@@ -67,7 +106,7 @@ class Debug {
 	
 	public static function dumpCss() {
 		if ( self::_setup() ) {
-		    header( "content-type: text/css" );
+			header( "content-type: text/css" );
 			ob_start();
 			self::$renderer->dumpCssAssets();
 			$content = ob_get_clean();
@@ -94,7 +133,7 @@ class Debug {
 			if ( substr( $realpath, 0, strlen( $base ) ) !== $base )
 				exit;
 			header( "content-type: ".mime_content_type( $realpath ) );
-		    readfile( $realpath );
+			readfile( $realpath );
 		}
 		exit;
 	}
