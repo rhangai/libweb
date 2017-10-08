@@ -15,7 +15,6 @@ class ValidatorException extends APIException {
 		$this->state        = $state;
 		$this->errors       = $errors;
 		$this->serializable = $serializable;
-		$this->stack        = $stack;
 
 		$msg = "Invalid fields: \n";
 		foreach ( $errors as $field ) {
@@ -29,7 +28,6 @@ class ValidatorException extends APIException {
 
 		$stack = $this->getTrace();
 		$base = __DIR__;
-
 		for ( $i = 0, $len = count($stack); $i<$len; ++$i ) {
 			$item = $stack[ $i ];
 			if ( @$item["file"] === null || @$item["line"] === null )
