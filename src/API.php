@@ -225,6 +225,13 @@ class API {
 			if ( $data instanceof APIException )
 				$errorType = $data->getType();
 			$obj = $this->formatResponse( $status, $data, $errorType, $req, $res );
+			if ( Config::get( "debug" ) && ( $data instanceof \Exception ) && !@$obj["error"]["data"] ) {
+				if ( isset( $data->xdebug_message ) ) {
+					header( "content-type: text/html" );
+					echo "<table>".$data->xdebug_message."</table>";
+					return;
+				}
+			}
 			$this->writeResponse( $obj );
 		}
 	}
@@ -266,6 +273,8 @@ class API {
 			}
 			echo "]";
 		} else if ( $isObject ) {
+			if ( is_callable( $obj, '__toString' ) )
+				echo $obj;
 			echo "{";
 			$first = true;
 			foreach( $obj as $key => $val ) {
