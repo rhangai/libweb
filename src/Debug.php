@@ -29,6 +29,11 @@ class DebugExceptonsCollector extends \DebugBar\DataCollector\ExceptionsCollecto
 	}
 };
 
+/// Disable logs
+class DebugPDOStatementDisableLog extends \PDOStatement {
+	protected function __construct() {}
+};
+
 /**
  * Debug class using php-debugbar
  */
@@ -36,6 +41,7 @@ class Debug {
 
 	private static $debugbar = null;
 	private static $renderer = null;
+	private static $debugPDO = null;
 	
 	public static function _setup() {
 		if ( self::$debugbar !== null )
@@ -63,8 +69,12 @@ class Debug {
 
 		// PDO collector
 		$pdo = DB::instance()->getPDO();
-		if ( $pdo instanceof \DebugBar\DataCollector\PDO\TraceablePDO )
-			$debugbar->addCollector( new \DebugBar\DataCollector\PDO\PDOCollector( $pdo ) );
+		if ( self::$debugPDO === null ) {
+			if ( $pdo instanceof \DebugBar\DataCollector\PDO\TraceablePDO ) {
+				self::$debugPDO = $pdo;
+				$debugbar->addCollector( new \DebugBar\DataCollector\PDO\PDOCollector( $pdo ) );
+			}
+		}
 
 		// Set storage
 		$storage = new \DebugBar\Storage\FileStorage( sys_get_temp_dir() . DIRECTORY_SEPARATOR . "php-debugbar" );
@@ -80,7 +90,11 @@ class Debug {
 			return $pdo;
 		return new \DebugBar\DataCollector\PDO\TraceablePDO( $pdo );
 	}
-
+	public static function disableDebugDB() {
+		if ( self::$debugPDO )
+			self::$debugPDO->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array( "LibWeb\\DebugPDOStatementDisableLog", array() ) );
+		self::$debugPDO = false;
+	}
 	/// Collect the debug data
 	public static function collect() {
 		if ( self::$debugbar )
