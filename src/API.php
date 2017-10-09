@@ -310,7 +310,7 @@ class API {
 	public function handleException( $e, $req, $res ) {
 		if ( $e instanceof \Exception ) {
 			error_log( $e );
-			Debug::collectException( $e );
+			Debug::exception( $e );
 		}
 		
 		if ( $e instanceof \LibWeb\APIException ) {

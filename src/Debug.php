@@ -82,11 +82,14 @@ class Debug {
 		return new \DebugBar\DataCollector\PDO\TraceablePDO( $pdo );
 	}
 
+	/// Collect the debug data
 	public static function collect() {
 		if ( self::$debugbar )
 			self::$debugbar->collect();
 	}
-	public static function collectException( $exception ) {
+
+	/// Loggers
+	public static function exception( $exception ) {
 		if ( !self::_setup() )
 			return;
 		self::$debugbar['exceptions']->addException( $exception );
