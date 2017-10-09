@@ -94,7 +94,11 @@ class Debug {
 			return;
 		self::$debugbar['exceptions']->addException( $exception );
 	}
-
+	public static function info( $message ) {
+		if ( !self::_setup() )
+			return;
+		self::$debugbar['messages']->addMessage( $message );		
+	}
 
 	public static function dumpJs( $base ) {
 		if ( self::_setup() ) {
