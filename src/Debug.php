@@ -69,8 +69,8 @@ class Debug {
 		// Set storage
 		$storage = new \DebugBar\Storage\FileStorage( sys_get_temp_dir() . DIRECTORY_SEPARATOR . "php-debugbar" );
 		$debugbar->setStorage( $storage );
-		$debugbar->sendDataInHeaders( true );
-		
+		if ( php_sapi_name() !== 'cli' )
+			$debugbar->sendDataInHeaders( true );
 		return true;
 	}
 	/**
