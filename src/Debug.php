@@ -40,7 +40,7 @@ class Debug {
 	public static function _setup() {
 		if ( self::$debugbar !== null )
 			return !!self::$debugbar;
-		if ( !Config::get( "debug" ) ) {
+		if ( ( !Config::get( "debug" ) ) || ( php_sapi_name() === 'cli' ) ) {
 			self::$debugbar = false;
 			return false;
 		}
@@ -69,8 +69,7 @@ class Debug {
 		// Set storage
 		$storage = new \DebugBar\Storage\FileStorage( sys_get_temp_dir() . DIRECTORY_SEPARATOR . "php-debugbar" );
 		$debugbar->setStorage( $storage );
-		if ( php_sapi_name() !== 'cli' )
-			$debugbar->sendDataInHeaders( true );
+		$debugbar->sendDataInHeaders( true );
 		return true;
 	}
 	/**
