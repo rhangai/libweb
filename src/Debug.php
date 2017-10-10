@@ -8,11 +8,12 @@ class Debug {
 
 	private static $debugbar = null;
 	private static $renderer = null;
+	private static $debugPDO = null;
 	
 	public static function _setup() {
 		if ( self::$debugbar !== null )
 			return !!self::$debugbar;
-		if ( !Config::get( "debug" ) ) {
+		if ( ( !Config::get( "debug" ) ) || ( php_sapi_name() === 'cli' ) ) {
 			self::$debugbar = false;
 			return false;
 		}
@@ -35,14 +36,17 @@ class Debug {
 
 		// PDO collector
 		$pdo = DB::instance()->getPDO();
-		if ( $pdo instanceof \DebugBar\DataCollector\PDO\TraceablePDO )
-			$debugbar->addCollector( new \DebugBar\DataCollector\PDO\PDOCollector( $pdo ) );
+		if ( self::$debugPDO === null ) {
+			if ( $pdo instanceof \DebugBar\DataCollector\PDO\TraceablePDO ) {
+				self::$debugPDO = $pdo;
+				$debugbar->addCollector( new \DebugBar\DataCollector\PDO\PDOCollector( $pdo ) );
+			}
+		}
 
 		// Set storage
 		$storage = new \DebugBar\Storage\FileStorage( sys_get_temp_dir() . DIRECTORY_SEPARATOR . "php-debugbar" );
 		$debugbar->setStorage( $storage );
 		$debugbar->sendDataInHeaders( true );
-		
 		return true;
 	}
 	/**
@@ -53,7 +57,11 @@ class Debug {
 			return $pdo;
 		return new \DebugBar\DataCollector\PDO\TraceablePDO( $pdo );
 	}
-
+	public static function disableDebugDB() {
+		if ( self::$debugPDO )
+			self::$debugPDO->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array( "LibWeb\\debug\\PDOStatementDisableLog", array() ) );
+		self::$debugPDO = false;
+	}
 	/// Collect the debug data
 	public static function collect() {
 		if ( self::$debugbar )
