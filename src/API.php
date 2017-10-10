@@ -327,7 +327,7 @@ class API {
 			Debug::dumpJs( $req->base() );
 		else if ( $uri === '/_debug.css' )
 			Debug::dumpCss();
-		else if ( $uri === '/_debug.handler' )
+		else if ( $uri === '/_debug/handler.json' )
 			Debug::dumpHandler();
 		else if ( self::_strStartsWith( $uri, "/_debug/fontawesome-webfont" ) )
 			Debug::dumpFontAwesome( $uri );

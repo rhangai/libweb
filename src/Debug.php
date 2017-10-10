@@ -2,34 +2,6 @@
 namespace LibWeb;
 
 /**
- * DebugExeption collector
- */
-class DebugExceptonsCollector extends \DebugBar\DataCollector\ExceptionsCollector {
-	
-	public function formatThrowableData($e)
-	{
-		$fileinfo = is_callable( array( $e, "serializeFile" ) ) ? $e->serializeFile() : array( "file" => $e->getFile(), "line" => $e->getLine() );
-		$filePath = $fileinfo["file"];
-		$line     = $fileinfo["line"];
-		if ($filePath && file_exists($filePath)) {
-			$lines = file($filePath);
-			$start = $line - 4;
-			$lines = array_slice($lines, $start < 0 ? 0 : $start, 7);
-		} else {
-			$lines = array("Cannot open the file ($filePath) in which the exception occurred ");
-		}
-		return array(
-			'type' => get_class($e),
-			'message' => $e->getMessage(),
-			'code' => $e->getCode(),
-			'file' => $filePath,
-			'line' => $line,
-			'surrounding_lines' => $lines
-		);
-	}
-};
-
-/**
  * Debug class using php-debugbar
  */
 class Debug {
@@ -56,7 +28,7 @@ class Debug {
 		$debugbar->addCollector( new \DebugBar\DataCollector\RequestDataCollector() );
 		$debugbar->addCollector( new \DebugBar\DataCollector\TimeDataCollector() );
 		$debugbar->addCollector( new \DebugBar\DataCollector\MemoryCollector() );
-		$debugbar->addCollector( new DebugExceptonsCollector() );
+		$debugbar->addCollector( new debug\ExceptionsCollector() );
 		
 		// Config collector
 		$debugbar->addCollector( new \DebugBar\DataCollector\ConfigCollector( Config::raw() ) );
@@ -100,17 +72,22 @@ class Debug {
 		self::$debugbar['messages']->addMessage( $message );		
 	}
 
+	/**
+	 * Dump the Javascript for the debug
+	 */
 	public static function dumpJs( $base ) {
 		if ( self::_setup() ) {
 			header( "content-type: text/javascript" );
-			self::$renderer->setOpenHandlerUrl( $base.'_debug.handler' );
+			self::$renderer->setOpenHandlerUrl( $base.'_debug/handler.json' );
 			self::$renderer->dumpJsAssets();
 
-			echo "PhpDebugBar.$( document ).ready(function() { PhpDebugBar.$(document.body).append(".json_encode( self::$renderer->render() )."); });";
+			echo "\nPhpDebugBar.$.noConflict(true);\nPhpDebugBar.$( document ).ready(function() {\n\tPhpDebugBar.$(document.body).append(".json_encode( self::$renderer->render() ).");\n});";
 		}
 		exit;
 	}
-	
+	/**
+	 * Dump the CSS
+	 */
 	public static function dumpCss() {
 		if ( self::_setup() ) {
 			header( "content-type: text/css" );
@@ -122,7 +99,9 @@ class Debug {
 		}
 		exit;
 	}
-	
+	/**
+	 * Dump the handler for the debug-bar scripts
+	 */
 	public static function dumpHandler() {
 		if ( self::_setup() ) {
 			$openHandler = new \DebugBar\OpenHandler( self::$debugbar );
@@ -131,7 +110,9 @@ class Debug {
 		}
 		exit;
 	}
-	
+	/**
+	 * Dump every font awesome
+	 */
 	public static function dumpFontAwesome( $uri ) {
 		if ( self::_setup() ) {
 			$base = self::$renderer->getBasePath().'/vendor/font-awesome/fonts/';
