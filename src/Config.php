@@ -32,7 +32,7 @@ class Config {
 		$name  = explode( '.', $name );
 		$value = self::$config;
 		for ( $i = 0, $len = count( $name ); $i < $len; ++$i ) {
-			$value = $value[ $name[ $i ] ];
+			$value = @$value[ $name[ $i ] ];
 		}
 		return $value;
 	}
