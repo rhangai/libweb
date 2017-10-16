@@ -231,7 +231,7 @@ class API {
 			if ( $data instanceof APIException )
 				$errorType = $data->getType();
 			$obj = $this->formatResponse( $status, $data, $errorType, $req, $res );
-			if ( Config::get( "debug" ) && ( $data instanceof \Exception ) && !@$obj["error"]["data"] ) {
+			if ( Config::get( "debug" ) && ( $data instanceof \Exception ) && !is_callable( array( $data, "serializeAPI" ) ) ) {
 				if ( isset( $data->xdebug_message ) ) {
 					header( "content-type: text/html" );
 					echo "<table>".$data->xdebug_message."</table>";
