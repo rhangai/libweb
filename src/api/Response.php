@@ -51,8 +51,9 @@ class Response {
 			$stats = fstat( $handle );
 			$this->headers_['content-length'] = @$stats['size'];
 			rewind( $handle );
-			$this->data_ = function() use ( $handle, $size, $options ) {
+			$this->data_ = function() use ( $handle ) {
 				fpassthru( $handle );
+				fclose( $handle );
 			};
 		} else {
 			throw new \InvalidArgumentException( "Excepted stream or function" );
