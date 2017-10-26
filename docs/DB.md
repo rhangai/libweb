@@ -46,12 +46,12 @@ Methods
   ```
   **Returns** The ID of the inserted element, if applicable
   
-- `updateOne( $query, $data = null )`
+- `updateOne( $table, $id, $data = null );`
 
   Ensure only one row is updated
   ```php
   // Throws if no rows or more than one rows are updated
-  DB::updateOne( "UPDATE table SET name='test' WHERE id=?", array( 10 ) );
+  DB::updateOne( "TABLE", array("id" =>$id), array( "field" => $value ) );
   ```
   **Returns** nothing
   
