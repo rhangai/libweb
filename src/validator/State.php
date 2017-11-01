@@ -11,8 +11,9 @@ class State {
 	public $key;
 	public $error;
 	public $fullKey;
+	public $rules;
 	private $errorBag;
-	private $parent;
+	private $parent_;
     private $root;
 
 	/// Construct
@@ -21,7 +22,7 @@ class State {
 		$this->value   = $value;
 		$this->key     = $key;
 		if ( $parent ) {
-			$this->parent = $parent;
+			$this->parent_ = $parent;
 			if ( $parent->fullKey ) {
 				$this->fullKey   = $parent->fullKey;
 				$this->fullKey[] = $key;
@@ -35,7 +36,7 @@ class State {
 		}
 	}
 	public function getParent() {
-		return $this->parent;
+		return $this->parent_;
 	}
 	/// Set the errors
 	public function setError( $error = true ) {

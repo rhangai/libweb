@@ -6,7 +6,9 @@ class RuleChain extends Rule {
 	private $rules = array();
 	
 	public function __call( $method, $args ) {
-		$this->rules[] = RuleSet::get( $method, $args );
+		$rule = RuleSet::get( $method, $args );
+		$this->rules[] = $rule;
+		$this->dependencies_ = $this->dependencies_ + $rule->dependencies_;
 		return $this;
 	}
 
@@ -15,10 +17,6 @@ class RuleChain extends Rule {
 		foreach ( $this->rules as $rule )
 			$chain->rules[] = $rule->clone();
 		return $chain;
-	}
-
-	public function optional() {
-		
 	}
 
 	public function apply( $state ) {

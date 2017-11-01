@@ -9,6 +9,7 @@ class RuleSet {
 		'arrayOf' => '\LibWeb\validator\rule\ArrayOfRule',
 		'date'    => '\LibWeb\validator\rule\DateTimeRule',
 		'file'    => '\LibWeb\validator\rule\FileRequestRule',
+		'obj'     => '\LibWeb\validator\rule\ObjectRule',
 	);
 
 	/// Inline validators, shortcuts to default php functions
@@ -29,9 +30,11 @@ class RuleSet {
 			return $obj;
 		} else if ( isset( self::$inlines[$name] ) ) {
 			return new rule\InlineRule( self::$inlines[$name], $args );
-		} else if ( $name !== 'get' && is_callable( array( __CLASS__, $name ) ) )
+		} else if ( $name !== 'get' && is_callable( array( __CLASS__, $name ) ) ) {
 			return new rule\InlineRule( array( __CLASS__, $name ), $args );
-		else
+		} else if ( $name !== 'get' && is_callable( array( RuleSetRaw::class, $name ) ) ) {
+			return new RuleSetRaw( $name, $args );
+		} else
 			throw new \InvalidArgumentException( "Invalid rule ".$name );
 	}
 	// Add a new inline rule
@@ -43,7 +46,7 @@ class RuleSet {
 	public static function any( $value ) {
 		return true;
 	}
-	
+		
 	// String value
 	public static function strval( $value, $trim = true ) {
 		return self::s( $value, $trim );

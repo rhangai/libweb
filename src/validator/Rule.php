@@ -64,7 +64,6 @@ abstract class Rule {
 	 * Validate the state of an array
 	 */
 	public static function validateStateObject( $rules, $state, $flags = null ) {
-		$result = array();
 		$values = $state->value;
 		$getter = null;
 		if ( !$values )
@@ -110,9 +109,14 @@ abstract class Rule {
 		foreach ( $normalizedRules as $key => $rule ) {
 			$ruleSorter->add( $key, $rule->dependencies_ );
 		}
+		$sortedRules = $ruleSorter->sort();
 		
 
-		foreach ( $ruleSorter->sort() as $key ) {
+		$result = (object) array();
+		$state->rules = $normalizedRules;
+		$state->value = $result;
+		var_dump( $sortedRules );
+		foreach ( $sortedRules as $key ) {
 			$rule = $normalizedRules[$key];
 			$childState = new State( $getter->get( $key ), $key, $state );
 			self::validateState( $rule, $childState );
@@ -120,11 +124,15 @@ abstract class Rule {
 				if ( $childState->value === null )
 					continue;
 			}
-			$result[ $key ] = $childState->value;
+			$result->{$key} = $childState->value;
 		}
-		$state->value = (object) $result;
 		if ( @$rules['$after'] )
 			self::validateState( $rules['$after'], $state, $flags );
+	}
+
+	public function dependsOn( $field ) {
+		$this->dependencies_[] = $field;
+		return $this;
 	}
 
 	// Flag
