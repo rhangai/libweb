@@ -49,6 +49,11 @@ class RuleSet {
 		return self::s( $value, $trim );
 	}
 	public static function s( $value, $trim = true ) {
+		if ( is_object( $value ) ) {
+			if ( !method_exists( $value, '__toString' ) )
+				throw new \Exception( "Object cannot be converted to string" );
+			$value = (string) $value;
+		}
 		if ( $trim !== false )
 			return trim( $value );
 		else
