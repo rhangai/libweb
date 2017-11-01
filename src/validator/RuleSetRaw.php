@@ -9,12 +9,15 @@ class RuleSetRaw extends Rule {
 	public function __construct( $method, $args ) {
 		$this->method = $method;
 		$this->args   = $args;
+	}
+
+	public function _setup() {
+		$method = $this->method;
 		if ( is_string( $method ) && is_callable( array( __CLASS__, $method.'__setup' ) ) ) {
-			$setupArgs = $args;
+			$setupArgs = $this->args;
 			array_unshift( $setupArgs, $this );
 			call_user_func_array( array( __CLASS__, $method.'__setup' ), $setupArgs );
 		}
-			
 	}
 
 	public function _clone() {
@@ -37,14 +40,16 @@ class RuleSetRaw extends Rule {
 	}
 	
 	public static function ifField( $state, $field, $rules ) {
-		Rule::validateState( $state->getParent()->rules[ $field ], $state );
-		if ( @$state->getParent()->value->{$field} != $state->value )
-			$state->setError( new \Exception( "Field must be the same as ".$field ) );
+		if ( @$state->getParent()->value->{$field} !== null ) {
+			Rule::validateState( $rules, $state );
+		} else
+			$state->value = null;
 	}
 	public static function ifField__setup( $rule, $field, $rules ) {
 		$field = (array) $field;
 		foreach ( $field as $dep )
 			$rule->dependencies_[] = $dep;
+		$rule->getRoot()->flags_ |= Rule::FLAG_ALWAYS;
 	}
 	
 };

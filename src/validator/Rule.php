@@ -23,9 +23,12 @@ abstract class Rule {
 
 	const FLAG_OPTIONAL  = 0x01;
 	const FLAG_SKIPPABLE = 0x02;
+	const FLAG_ALWAYS    = 0x04;
+	
 	/// Clone this rule
 	final public function clone() {
 		$clone = $this->_clone();
+		$clone->root_         = $this->root_;
 		$clone->flags_        = $this->flags_;
 		$clone->dependencies_ = $this->dependencies_;
 		return $clone;
@@ -51,12 +54,14 @@ abstract class Rule {
 			$rule = new rule\ObjectRule( $rule );
 		if ( $flags === null )
 			$flags = $rule->flags_;
-		
-		if ( ( $state->value === null ) || ( $state->value === '' ) ) {
-			if (( $flags & self::FLAG_OPTIONAL ) === 0 )
-				$state->setError( "Field is not optional" );
-			$state->value = null;
-			return;
+
+		if ( ( $flags & self::FLAG_ALWAYS ) === 0 ) {
+			if ( ( $state->value === null ) || ( $state->value === '' ) ) {
+				if (( $flags & self::FLAG_OPTIONAL ) === 0 )
+					$state->setError( "Field is not optional" );
+				$state->value = null;
+				return;
+			}
 		}
 		$rule->apply( $state );
 	}
@@ -115,12 +120,11 @@ abstract class Rule {
 		$result = (object) array();
 		$state->rules = $normalizedRules;
 		$state->value = $result;
-		var_dump( $sortedRules );
 		foreach ( $sortedRules as $key ) {
 			$rule = $normalizedRules[$key];
 			$childState = new State( $getter->get( $key ), $key, $state );
 			self::validateState( $rule, $childState );
-			if ( $childFlags & self::FLAG_SKIPPABLE ) {
+			if ( $rule->flags_ & self::FLAG_SKIPPABLE ) {
 				if ( $childState->value === null )
 					continue;
 			}
@@ -135,7 +139,10 @@ abstract class Rule {
 		return $this;
 	}
 
+	public function getRoot() { return $this->root_ ?: $this; }
+
 	// Flag
+	public $root_;
 	public $flags_ = 0;
 	public $dependencies_ = array();
 };
