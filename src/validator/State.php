@@ -6,33 +6,31 @@ namespace LibWeb\validator;
  */
 class State {
 
-	public $initial;
 	public $value;
-	public $key;
-	public $error;
-	public $fullKey;
-	public $rules;
-	private $errorBag;
+
+	private $done_;
+	private $initial_;
+	private $errorBag_;
 	private $parent_;
-    private $root;
+    private $root_;
+	private $key_;
 
 	/// Construct
 	public function __construct( $value, $key = null, $parent = null ) {
-		$this->initial = $value;
-		$this->value   = $value;
-		$this->key     = $key;
+		$key = ($key !== null) ? ((array) $key) : array();
+		
+		$this->value     = $value;
+
+		$this->done_     = false;
+		$this->initial_  = $value;
+		$this->errorBag_ = array();
+		$this->parent_   = $parent;
 		if ( $parent ) {
-			$this->parent_ = $parent;
-			if ( $parent->fullKey ) {
-				$this->fullKey   = $parent->fullKey;
-				$this->fullKey[] = $key;
-			} else {
-				$this->fullKey = array( $key );
-			}
-			$this->root   = $parent->root;
+			$this->root_ = $parent->root_;
+			$this->key_  = $parent->key_ ? ($parent->key_ + $key) : $key;
 		} else {
-			$this->errorBag = array();
-			$this->root     = $this;
+			$this->root_ = $this;
+			$this->key_  = $key;
 		}
 	}
 	public function getParent() {
@@ -40,15 +38,26 @@ class State {
 	}
 	/// Set the errors
 	public function setError( $error = true ) {
-		$this->error = true;
-		$this->root->errorBag[] = (object) array(
-			"key" => $this->fullKey,
+		$this->errorBag_[] = (object) array(
+			"key"   => $this->key_,
 			"error" => $error
 		);
 	}
+	/// Merge the errors
+	public function mergeErrors( $errors ) {
+		$this->errorBag_ += $errors;
+	}
 	/// Get the errors
 	public function errors() {
-		return $this->root->errorBag;
+		return $this->errorBag_;
+	}
+	/// Check if done
+	public function isDone() {
+		return $this->done_;
+	}
+	/// Mark as done
+	public function markDone() {
+		$this->done_ = true;
 	}
 	
 };

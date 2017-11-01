@@ -7,8 +7,7 @@ class Validator {
 		if ( ( $options === true ) || ( $options === false ) )
 			$options = array( "serializable" => $options );
 		$state = new validator\State( $value );
-		validator\Rule::validateState( $rule, $state );
-
+		validator\Rule::validateState( $state, $rule );
 		$errors = $state->errors();
 		if ( $errors )
 			throw new ValidatorException( $state, $errors, @$options["serializable"] );
@@ -21,7 +20,7 @@ class Validator {
 	}
 	/// This method will cal
 	public static function __callStatic( $method, $args ) {
-		$chain = new validator\RuleChain;
+		$chain = new validator\rule\ChainRule;
 		$chain->__call( $method, $args );
 		return $chain;
 	}
