@@ -221,6 +221,31 @@ class RuleSet {
 		return implode( "", $out );
 	}
 
+
+	// Object rules
+
+	// Allow only one field (or N) on a single object
+	public static function allowOnlyOneOf( $value, $keys, $count = 1 ) {
+		$value = (array) $value;
+
+		$existing = [];
+		foreach ( $keys as $key ) {
+			if ( @$value[$key] != null )
+				$existing[] = $key;
+		}
+
+		$existingLen = count($existing);
+		if ( $existingLen != $count ) {
+			$passed = ($existingLen === 0) ? "None passed." : ("Passed: ".implode(", ", $existing).".");
+			if ( $existingLen < $count ) {
+				throw new \Exception( "You must pass at least ".$count." of ".implode( ", ", $keys ).". ".$passed );
+			} else if ( $existingLen > $count ) {
+				throw new \Exception( "Only ".$count." of ".implode( ", ", $keys )." are allowed. ".$passed );
+			}
+		}
+		return true;
+	}
+
 	// Email
 	public static function email( $email ) {
 		return filter_var( $email, FILTER_VALIDATE_EMAIL );
