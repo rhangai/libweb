@@ -44,6 +44,7 @@ abstract class Rule {
 	public static function validateStateObject( $rules, $state, $flags = 0 ) {
 		$result = array();
 		$values = $state->value;
+		$getter = null;
 		if ( !$values )
 			$getter = new RuleGetterNull;
 		else if ( is_array( $values ) )
@@ -58,7 +59,13 @@ abstract class Rule {
 			$state->setError( "Invalid object to validate" );
 			return;
 		}
+
 		foreach ( $rules as $key => $rule ) {
+			//
+			if ( @$key[0] === '$' )
+				continue;
+			
+			// Check for flags
 			$childFlags = 0;
 			$keyLen = strlen( $key );
 			if ( $key[ $keyLen - 1 ] === '?' ) {
@@ -80,5 +87,7 @@ abstract class Rule {
 			$result[ $key ] = $childState->value;
 		}
 		$state->value = (object) $result;
+		if ( @$rules['$after'] )
+			self::validateState( $rules['$after'], $state, $flags );
 	}
 };
