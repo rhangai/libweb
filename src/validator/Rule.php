@@ -1,6 +1,8 @@
 <?php
 namespace LibWeb\validator;
 
+use MJS\TopSort\Implementations\StringSort;
+
 class RuleGetterNull {
 	public function get( $key ) { return null; }
 };
@@ -21,27 +23,47 @@ abstract class Rule {
 
 	const FLAG_OPTIONAL  = 0x01;
 	const FLAG_SKIPPABLE = 0x02;
+	/// Clone this rule
+	final public function clone() {
+		$clone = $this->_clone();
+		$clone->flags_        = $this->flags_;
+		$clone->dependencies_ = $this->dependencies_;
+		return $clone;
+	}
 	/// Apply a rule
+	abstract public function _clone();
 	abstract public function apply( $state );
+	/**
+	 * Clona com a flag
+	 */
+	public static function withFlags( $rule, $flags, $set = false ) {
+		if ( is_array( $rule ) )
+			$rule = new rule\ObjectRule( $rule );
+		$other = $rule->clone();
+		$other->flags_ = ( $set ? $flags : ($rule->flags_ | $flags) );
+		return $other;
+	}
 	/**
 	 * Validate the state
 	 */
-	public static function validateState( $rule, $state, $flags = 0 ) {
+	public static function validateState( $rule, $state, $flags = null ) {
+		if ( is_array( $rule ) )
+			$rule = new rule\ObjectRule( $rule );
+		if ( $flags === null )
+			$flags = $rule->flags_;
+		
 		if ( ( $state->value === null ) || ( $state->value === '' ) ) {
 			if (( $flags & self::FLAG_OPTIONAL ) === 0 )
 				$state->setError( "Field is not optional" );
 			$state->value = null;
 			return;
 		}
-		if ( is_array( $rule ) )
-			self::validateStateObject( $rule, $state, $flags );
-		else
-			$rule->apply( $state );
+		$rule->apply( $state );
 	}
 	/**
 	 * Validate the state of an array
 	 */
-	public static function validateStateObject( $rules, $state, $flags = 0 ) {
+	public static function validateStateObject( $rules, $state, $flags = null ) {
 		$result = array();
 		$values = $state->value;
 		$getter = null;
@@ -60,8 +82,11 @@ abstract class Rule {
 			return;
 		}
 
+
+		// Normalize rules
+		$normalizedRules = array();
 		foreach ( $rules as $key => $rule ) {
-			//
+			// Normalize rules
 			if ( @$key[0] === '$' )
 				continue;
 			
@@ -76,10 +101,21 @@ abstract class Rule {
 					$childFlags |= self::FLAG_OPTIONAL;
 					$key		 = substr( $key, 0, $keyLen - 1 );
 				}
-			} 
-			
+			}
+			$normalizedRules[$key] = self::withFlags( $rule, $childFlags );
+		}
+
+		//
+		$ruleSorter = new StringSort();
+		foreach ( $normalizedRules as $key => $rule ) {
+			$ruleSorter->add( $key, $rule->dependencies_ );
+		}
+		
+
+		foreach ( $ruleSorter->sort() as $key ) {
+			$rule = $normalizedRules[$key];
 			$childState = new State( $getter->get( $key ), $key, $state );
-			self::validateState( $rule, $childState, $childFlags );
+			self::validateState( $rule, $childState );
 			if ( $childFlags & self::FLAG_SKIPPABLE ) {
 				if ( $childState->value === null )
 					continue;
@@ -90,4 +126,8 @@ abstract class Rule {
 		if ( @$rules['$after'] )
 			self::validateState( $rules['$after'], $state, $flags );
 	}
+
+	// Flag
+	public $flags_ = 0;
+	public $dependencies_ = array();
 };

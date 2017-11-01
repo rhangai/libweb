@@ -10,6 +10,17 @@ class RuleChain extends Rule {
 		return $this;
 	}
 
+	public function _clone() {
+		$chain = new RuleChain();
+		foreach ( $this->rules as $rule )
+			$chain->rules[] = $rule->clone();
+		return $chain;
+	}
+
+	public function optional() {
+		
+	}
+
 	public function apply( $state ) {
 		foreach ( $this->rules as $rule ) {
 			$rule->apply( $state );

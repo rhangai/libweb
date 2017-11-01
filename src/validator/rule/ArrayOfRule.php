@@ -22,5 +22,10 @@ class ArrayOfRule extends Rule {
 	    $state->value = $result;
 	}
 
+	// Rule
+	public function _clone() {
+		return new ArrayOfRule( $this->rule );
+	}
+
 	
 };

@@ -11,6 +11,10 @@ class FileRequestRule extends Rule {
 		$this->multiple = $multiple;
 	}
 
+	public function _clone() {
+		return new FileRequestRule( $this->multiple );
+	}
+
 	public function apply( $state ) {
 		$parent = $state->getParent();
 		if ( !$parent ) {

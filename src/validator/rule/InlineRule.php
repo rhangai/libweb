@@ -20,6 +20,10 @@ class InlineRule extends Rule {
 		$this->args   = $args;
 	}
 
+	public function _clone() {
+		return new InlineRule( $this->method, $this->args );
+	}
+
 	public function apply( $state ) {
 		$value = $state->value;
 		try {

@@ -27,6 +27,10 @@ class DateTimeRule extends Rule {
 		$this->out     = $out;
 	}
 
+	public function _clone() {
+		return new DateTimeRule( $this->format, $this->out );
+	}
+
 	public function apply( $state ) {
 		$value = $state->value;
 		if ( is_string( $value ) ) {
