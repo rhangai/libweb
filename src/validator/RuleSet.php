@@ -38,6 +38,12 @@ class RuleSet {
 	public static function addInlineRule( $name, $rule ) {
 		self::$inlines[ $name ] = $rule;
 	}
+
+	// Any value
+	public static function any( $value ) {
+		return true;
+	}
+	
 	// String value
 	public static function strval( $value, $trim = true ) {
 		return self::s( $value, $trim );
