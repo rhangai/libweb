@@ -14,7 +14,7 @@ abstract class Rule {
 	/**
 	 * Normalize the rule
 	 */
-	public static function normalize( $rule ) {
+	public static function tryNormalize( $rule ) {
 		if ( is_array( $rule ) ) {
 			$normalized = array();
 			$special    = array();
@@ -54,8 +54,16 @@ abstract class Rule {
 			
 			$rule = new rule\ObjectRule( $normalized, $special );
 		}
-
 		if ( !$rule instanceof Rule )
+			return null;
+		return $rule;
+	}
+	/**
+	 * Normalize the rule
+	 */
+	public static function normalize( $rule ) {
+		$rule = self::tryNormalize( $rule );
+		if ( !$rule )
 			throw new \InvalidArgumentException( "Expecting Rule" );
 		return $rule;
 	}
@@ -87,7 +95,6 @@ abstract class Rule {
 		return $clone;
 	}
 	public function testFlag( $flag ) {
-		var_dump( ($this->flags_ & $flag), $flag );
 		return ($this->flags_ & $flag) === $flag;
 	}
 
