@@ -31,7 +31,7 @@ class RuleSetRaw extends Rule {
 	}
 
 	public static function same( $state, $field ) {
-		Rule::validateState( $state->getParent()->rules[ $field ], $state );
+		Rule::validateState( $state, $state->getParent()->rules[ $field ] );
 		if ( @$state->getParent()->value->{$field} != $state->value )
 			$state->setError( new \Exception( "Field must be the same as ".$field ) );
 	}
@@ -41,7 +41,7 @@ class RuleSetRaw extends Rule {
 	
 	public static function ifField( $state, $field, $rules ) {
 		if ( @$state->getParent()->value->{$field} !== null ) {
-			Rule::validateState( $rules, $state );
+			Rule::validateState( $state, $rules );
 		} else
 			$state->value = null;
 	}
@@ -51,5 +51,27 @@ class RuleSetRaw extends Rule {
 			$rule->dependencies_[] = $dep;
 		$rule->getRoot()->flags_ |= Rule::FLAG_ALWAYS;
 	}
+
+
+	public static function oneOf( $state, $values ) {
+		$value = $state->value;
+		foreach ( $values as $testValue ) {
+			$rule = Rule::tryNormalize( $testValue );
+			if ( !$rule ) {
+				if ( $testValue === $value )
+					return;
+			} else {
+				$cloneState = clone $state;
+				Rule::validateState( $cloneState, $rule );
+				if ( !$cloneState->errors() ) {
+					$state->value = $cloneState->value;
+					return;
+				}
+			}
+		}
+		$state->setError( new \Exception( "Must be one of the validators passed" ) );
+	}
+	
+
 	
 };
