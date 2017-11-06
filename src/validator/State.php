@@ -27,7 +27,7 @@ class State {
 		$this->parent_   = $parent;
 		if ( $parent ) {
 			$this->root_ = $parent->root_;
-			$this->key_  = $parent->key_ ? ($parent->key_ + $key) : $key;
+			$this->key_  = $parent->key_ ? array_merge( $parent->key_, $key ) : $key;
 		} else {
 			$this->root_ = $this;
 			$this->key_  = $key;
@@ -41,6 +41,8 @@ class State {
 	}
 	/// Set the errors
 	public function setError( $error = true ) {
+		if ( $error instanceof RuleException )
+			$error = $error->getMessage();
 		$this->errorBag_[] = (object) array(
 			"key"   => $this->key_,
 			"error" => $error
@@ -48,7 +50,7 @@ class State {
 	}
 	/// Merge the errors
 	public function mergeErrors( $errors ) {
-		$this->errorBag_ += $errors;
+		$this->errorBag_ = array_merge( $this->errorBag_, $errors );
 	}
 	/// Get the errors
 	public function errors() {
