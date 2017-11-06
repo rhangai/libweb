@@ -13,10 +13,16 @@ class ArrayOfRule extends Rule {
 
 	public function apply( $state ) {
 		$result = array();
+		if ( !is_array( $state->value ) ) {
+			$state->setError( "Not an array" );
+			return;
+		}
 		$values = ( array ) $state->value;
 		foreach ( $values as $key => $v ) {
 			$childState = new State( $v, $key, $state );
-			Rule::validateState( $this->rule, $childState );
+			Rule::validateState( $childState, $this->rule );
+			if ( $childState->errors() )
+				$state->mergeErrors( $childState->errors() );
 			$result[$key] = $childState->value;
 		}
 	    $state->value = $result;
