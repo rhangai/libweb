@@ -34,6 +34,8 @@ class Connection {
 		$this->lastQuery = $query;
 		if ( $data != null ) {
 			$stmt = $this->db->prepare( $query );
+			if ( $data instanceof \stdClass )
+				$data = (array) $data;
 			$stmt->execute( $data );
 			return $stmt;
 		} else {
