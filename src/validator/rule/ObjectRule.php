@@ -45,5 +45,9 @@ class ObjectRule extends Rule {
 		}
 		
 		$state->value = (object) $result;
+
+		if ( isset( $this->specialRules_['after'] ) ) {
+			Rule::validateState( $state, $this->specialRules_['after'] );
+		}
 	}
 };
