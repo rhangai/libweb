@@ -184,19 +184,20 @@ class RuleSet {
 
 	// String rules
 	public static function len( $value, $min, $max = null ) {
-		$len = strlen( $value );
+		$len = is_array( $value ) ? count( $value ) : strlen( $value );
 		if ( $max === null )
-			return ($len === $min);
-		else if ( ( $len > $max ) && ( $max > 0 ) )
-			return false;
+			$max = $min;
+		
+		if ( ( $len > $max ) && ( $max > 0 ) )
+			throw new RuleException( "Maximun lenght must be ".$max );
 		else if ( $len < $min )
-			return false;
+			throw new RuleException( "Minimun lenght must be ".$min );
 		return true;
 	}
 	public static function minlen( $value, $min ) {
-		$len = strlen( $value );
+		$len = is_array( $value ) ? count( $value ) : strlen( $value );
 	    if ( $len < $min )
-			return false;
+			throw new RuleException( "Minimun lenght must be ".$min );
 		return true;
 	}
 	public static function str_replace( $value, $search, $replace ) {
