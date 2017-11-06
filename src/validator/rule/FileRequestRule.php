@@ -29,7 +29,7 @@ class FileRequestRule extends Rule {
 		}
 		if ( !$this->multiple ) {
 			$state->value = $parent->file( $state->getKey(), false );
-			if ( !$state->value )
+			if ( !$state->value && !$this->testFlag( Rule::FLAG_OPTIONAL ) )
 				$state->setError( "Invalid file" );
 		} else {
 			$state->value = $parent->file( $state->getKey(), true );
