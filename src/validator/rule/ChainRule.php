@@ -23,7 +23,9 @@ class ChainRule extends Rule {
 	}
 	
 	public function apply( $state ) {
+		$flags = $this->getFlags();
 		foreach ( $this->rules_ as $rule ) {
+			$rule = $rule->withFlags( $flags );
 			$rule->apply( $state );
 			if ( $state->isDone() )
 				break;
