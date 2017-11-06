@@ -11,6 +11,7 @@ class ChainRule extends Rule {
 	public function __call( $method, $args ) {
 		$rule = RuleSet::get( $method, $args );
 		$this->rules_[] = $rule;
+		$this->flags_ |= $rule->getFlags();
 		return $this;
 	}
 
