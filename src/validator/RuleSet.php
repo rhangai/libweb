@@ -46,6 +46,11 @@ class RuleSet {
 	public static function any( $value ) {
 		return true;
 	}
+	
+	// Check if value matches the expected
+	public static function value( $value, $expected ) {
+		return ( $value === $expected );
+	}
 		
 	// String value
 	public static function strval( $value, $trim = true ) {
