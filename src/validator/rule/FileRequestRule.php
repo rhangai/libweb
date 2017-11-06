@@ -8,6 +8,7 @@ class FileRequestRule extends Rule {
 	private $multiple;
 
 	public function __construct( $multiple = false ) {
+		parent::__construct( Rule::FLAG_ALWAYS );
 		$this->multiple = $multiple;
 	}
 
@@ -26,7 +27,13 @@ class FileRequestRule extends Rule {
 			$state->setError(  "Invalid parent. Must be a Request instance" );
 			return;
 		}
-		$state->value = $parent->file( $state->getKey(), $this->multiple );
+		if ( !$this->multiple ) {
+			$state->value = $parent->file( $state->getKey(), false );
+			if ( !$state->value )
+				$state->setError( "Invalid file" );
+		} else {
+			$state->value = $parent->file( $state->getKey(), true );
+		}
 	}
 	
 };
