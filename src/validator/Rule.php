@@ -11,6 +11,11 @@ abstract class Rule {
 	const FLAG_OPTIONAL  = 0x01;
 	const FLAG_SKIPPABLE = 0x02;
 	const FLAG_ALWAYS    = 0x04;
+
+	// Construct
+	public function __construct( $flags = 0 ) {
+		$this->flags_ = $flags;
+	}
 	/**
 	 * Normalize the rule
 	 */
@@ -71,12 +76,14 @@ abstract class Rule {
 	 * Validate the state
 	 */
 	public static function validateState( $state, $rule ) {
-		if ( $state->value === null ) {
-			if ( !$rule->testFlag( Rule::FLAG_OPTIONAL ) )
-				$state->setError( "Rule is not optional" );
-			return;
-		}
 		$rule = self::normalize( $rule );
+		if ( !$rule->testFlag( Rule::FLAG_ALWAYS ) ) {
+			if ( $state->value === null ) {
+				if ( !$rule->testFlag( Rule::FLAG_OPTIONAL ) )
+					$state->setError( "Rule is not optional" );
+				return;
+			}
+		}
 		$rule->apply( $state );
 	}
 	/**
@@ -97,6 +104,9 @@ abstract class Rule {
 	public function testFlag( $flag ) {
 		return ($this->flags_ & $flag) === $flag;
 	}
+	public function getFlags() {
+		return $this->flags_;
+	}
 
 	
 	/// Clone this rule
@@ -111,6 +121,6 @@ abstract class Rule {
 	abstract public function apply( $state );
 
 	// Flag
-	private $flags_ = 0;
-	private $dependencies_ = array();
+	protected $flags_ = 0;
+	private   $dependencies_ = array();
 };
