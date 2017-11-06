@@ -247,9 +247,9 @@ class RuleSet {
 		if ( $existingLen != $count ) {
 			$passed = ($existingLen === 0) ? "None passed." : ("Passed: ".implode(", ", $existing).".");
 			if ( $existingLen < $count ) {
-				throw new \Exception( "You must pass at least ".$count." of ".implode( ", ", $keys ).". ".$passed );
+				throw new RuleException( "You must pass at least ".$count." of [".implode( ", ", $keys )."]. ".$passed );
 			} else if ( $existingLen > $count ) {
-				throw new \Exception( "Only ".$count." of ".implode( ", ", $keys )." are allowed. ".$passed );
+				throw new RuleException( "Only ".$count." of [".implode( ", ", $keys )."] are allowed. ".$passed );
 			}
 		}
 		return true;
