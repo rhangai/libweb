@@ -102,7 +102,7 @@ class Request {
 		} else
 			$file = @$files[ $name ];
 		if ( !$file )
-			return null;
+			return $array ? array() : null;
 		if ( $array )
 			$file = is_array( $file ) ? $file : array( $file );
 		else
