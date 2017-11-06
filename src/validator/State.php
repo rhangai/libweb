@@ -36,6 +36,9 @@ class State {
 	public function getParent() {
 		return $this->parent_;
 	}
+	public function getKey() {
+		return $this->key_;
+	}
 	/// Set the errors
 	public function setError( $error = true ) {
 		$this->errorBag_[] = (object) array(
