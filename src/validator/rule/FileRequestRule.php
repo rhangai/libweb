@@ -16,17 +16,14 @@ class FileRequestRule extends Rule {
 	}
 
 	public function apply( $state ) {
-		$parent = $state->getParent();
-		if ( !$parent ) {
-			$state->setError( "Invalid parent. Must be a Request instance" );
-			return;
+		$files = $state->value;
+		if ( $files ) {
+			if ( is_array( $files ) )
+				$files = $this->multiple ? $files : @$files[0];
+			else
+				$files = $this->multiple ? array($files) : $files;
 		}
-		$parent = $parent->value;
-		if ( ( !$parent ) || !($parent instanceof Request ) ) {
-			$state->setError(  "Invalid parent. Must be a Request instance" );
-			return;
-		}
-		$state->value = $parent->file( $state->key, $this->multiple );
+		$state->value = $files;
 	}
 	
 };
