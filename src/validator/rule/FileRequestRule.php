@@ -27,12 +27,14 @@ class FileRequestRule extends Rule {
 			$state->setError(  "Invalid parent. Must be a Request instance" );
 			return;
 		}
+
+		$key = implode( ".", $state->getKey() );
 		if ( !$this->multiple ) {
-			$state->value = $parent->file( $state->getKey(), false );
+			$state->value = $parent->file( $key, false );
 			if ( !$state->value && !$this->testFlag( Rule::FLAG_OPTIONAL ) )
 				$state->setError( "Invalid file" );
 		} else {
-			$state->value = $parent->file( $state->getKey(), true );
+			$state->value = $parent->file( $key, true );
 		}
 	}
 	
