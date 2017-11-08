@@ -9,13 +9,15 @@ class Connection {
 	private $inTransaction;
 	private $lastQuery;
 	private $debugMode;
+	private $dbClass;
 	/**
 	 * Construct the PDO connection
 	 */
-	public function __construct( $db ) {
+	public function __construct( $db, $dbClass = null ) {
 		$this->db = $db;
 		$this->inTransaction = false;
 		$this->lastQuery     = null;
+		$this->dbClass       = $dbClass;
 	}
 	// Get the internal PDO object
 	public function getPDO() { return $this->db; }
@@ -25,6 +27,28 @@ class Connection {
 			$this->debugMode = true;
 			if ( !$this->inTransaction )
 				$this->db->beginTransaction();
+		}
+	}
+	/// Refresh the connection status
+	public function ping() {
+		try {
+			$this->db->query( "SHOW STATUS" );
+		} catch( \PDOException $e ) {
+            if ( ( $e->getCode() != 'HY000' ) || !stristr( $e->getMessage(), 'server has gone away' ) )
+                throw $e;
+            $this->reconnect();
+        }
+	}
+	/// Reconnect
+	public function reconnect() {
+		if ( !$this->dbClass )
+			throw new \LogicException( "Cannot reconnect without class parameter" );
+		$this->db = call_user_func( array( $this->dbClass, 'createConnection' ) );
+		$this->inTransaction = false;
+		$this->lastQuery     = null;
+		if ( $this->debugMode ) {
+			$this->debugMode = false;
+			$this->enableDebug();
 		}
 	}
 	/**

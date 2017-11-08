@@ -34,6 +34,10 @@ class DB {
 		$db = static::instance();
 		return $db->enableDebug();
 	}
+	public static function ping() {
+		$db = static::instance();
+		return $db->ping();
+	}
 	public static function ensureOne( $query, $data = null ) {
 		$db = static::instance();
 		return $db->ensureOne( $query, $data );
@@ -84,7 +88,7 @@ class DB {
 		if ( static::isSingleton() )
 			$k = get_called_class();
 		if ( !@DB::$instances[ $k ] )
-			@DB::$instances[ $k ]	= new Connection( static::createConnection() );
+			@DB::$instances[ $k ]	= new Connection( static::createConnection(), get_called_class() );
 		return DB::$instances[ $k ];
 	}
 }
