@@ -118,7 +118,14 @@ class API {
 				$ret = call_user_func( $handler, $req, $res );
 			} catch( \Exception $e ) {
 				$ret = $this->handleException( $e, $req, $res );
+			} catch( \Error $e ) {
+				error_log( $e );
+				Debug::exception( $e );
+				$res->code( 500 );
+				$res->data( Config::get( "debug" ) ? null : $this->debugFormatException( $e ) );
+				break;
 			}
+
 			if ( $ret != null ) {
 				$res->data( $ret );
 				break;
@@ -184,19 +191,28 @@ class API {
 		return $data;
 	}
 	// Make a debugable interface for an exception
-	public function debugFormatException( $exception ) {
-		$previous = $exception->getPrevious();
-		$previous = ($previous instanceof \Exception) ? $this->debugFormatException( $previous ) : null;
-		return array(
+	public function debugFormatException( $exception, $skipPrevious = false ) {
+		$info =  array(
 			"code"		=> $exception->getCode(),
 			"message"	=> $exception->getMessage(),
 			"file"		=> $exception->getFile(),
 			"line"		=> $exception->getLine(),
-			"trace"		=> $exception->getTraceAsString(),
-			"previous"	=> $previous,
+			"trace"		=> explode( "\n", $exception->getTraceAsString() ),
 			"exception" => $exception->__toString(),
 			'$obj'		=> $exception,
 		);
+		if ( !$skipPrevious  ) {
+			$previousList = array();
+			$current = $exception;
+			while ( true ) {
+				$current = $current->getPrevious();
+				if ( !$current || !($current instanceof \Exception) )
+					break;
+				$previousList = $this->debugFormatException( $current, true );
+			}
+			$info[ "previous" ] = $previousList;
+		}
+		return $info;
 	}
 	/// Defaults to sending JSON api
 	public function sendResponse( $req, $res, $headersOnly = false ) {
