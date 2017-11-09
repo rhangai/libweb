@@ -59,7 +59,7 @@ class RuleSet {
 	public static function s( $value, $trim = true ) {
 		if ( is_object( $value ) ) {
 			if ( !method_exists( $value, '__toString' ) )
-				throw new \Exception( "Object cannot be converted to string" );
+				throw RuleException::createWithValue( "Object cannot be converted to string.", $value );
 			$value = (string) $value;
 		}
 		if ( $trim !== false )
@@ -77,10 +77,10 @@ class RuleSet {
 		    return true;
 		} else if ( is_string( $value ) ) {
 			if ( !ctype_digit( $value ) )
-				return false;
+				throw RuleException::createWithValue( "Value must be an int.", $value );
 			return intval( trim( $value ), 10 );
 		} else
-			return false;
+			throw RuleException::createWithValue( "Value must be an int.", $value );
 	}
 
 	// Float value
@@ -109,11 +109,11 @@ class RuleSet {
 			}
 			$split = explode( $decimal, $value );
 			if ( ( count($split) != 2 ) || ( !ctype_digit( $split[0] ) ) || ( !ctype_digit( $split[1] ) ) )
-				return false;
+				throw RuleException::createWithValue( "Value must be a float.", $value );
 			$value = ( $decimal === '.' ) ? floatval( $value ) : floatval( $split[0].'.'.$split[1] );
 			return $isNegative ? -$value : $value;
 		} else
-			return false;
+			throw RuleException::createWithValue( "Value must be a float.", $value );
 	}
 
 	// Boolean value
@@ -126,7 +126,8 @@ class RuleSet {
 		else if ( ( $value === true ) || ( $value === 'true' ) || ( $value == '1' ) )
 		    return new rule\InlineRuleValue( true );
 		else
-			return false;
+			throw RuleException::createWithValue( "Value must be a boolean.", $value );
+
 	}
 	
 	// Decimal value
@@ -144,16 +145,19 @@ class RuleSet {
 				$value = str_replace( '.', "#.", $value );
 				$value = str_replace( $decimalSeparator, '.', $value );
 			}
+		}
+		try {
 			$value = new impl\Decimal( $value, $decimal );
-		} else {
-			$value = new impl\Decimal( $value, $decimal );
+		} catch ( \RtLopez\ConversionException $e ) {
+			throw RuleException::createWithValue( $e->getMessage(), $value );
 		}
 
 		$integralDigits = $digits - $decimal;
 		$max = \RtLopez\Decimal::create( '10', $decimal )->pow( $integralDigits );
 		$min = $max->mul( -1 );
-		if ( $value->ge( $max ) || $value->le( $min ) )
-			return false;
+		if ( $value->ge( $max ) || $value->le( $min ) ) {
+			throw new RuleException( "Value out of range. Must be between ".$min->format(null, '.', '')." and ".$max->format( null, '.', '' ) );
+		}
 		
 		
 		return $value;
@@ -163,21 +167,20 @@ class RuleSet {
 	public static function regex( $value, $pattern ) {
 	    $match = preg_match( $pattern, $value );
 		if ( !$match )
-			return false;
-		return true;
+			throw RuleException::createWithValue( "Value must match Regex '".$pattern."'.", $value );
 	}
 	
 	// Check against a set
 	public static function set( $value, $ary ) {
-		return in_array( $value, $ary );
+		if ( !in_array( $value, $ary ) )
+			throw RuleException::createWithValue( "Value must be one of [".implode( ", ", $ary )."].", $value );
 	}
 	
 	// Map the value to another one
 	public static function map( $value, $map ) {
-		$value = @$map[$value];
-		if ( $value === null )
-			return false;
-		return $value;
+		if ( !array_key_exists( $value, $map ) )
+			throw RuleException::createWithValue( "Value must be one of [".implode( ", ", array_keys( $map ) )."].", $value );
+		return new rule\InlineRuleValue( $map[$value] );
 	}
 
 
@@ -209,7 +212,7 @@ class RuleSet {
 		else if ( is_callable( $replace ) )
 			return preg_replace_callback( $search, $replace, $value );
 		else
-			return false;
+			throw new \InvalidArgumentException( "Parameter to replace must be a callback, or a string" );
 	}
 	public static function blacklist( $value, $chars ) {
 		$out = array();
@@ -266,7 +269,7 @@ class RuleSet {
 
 		// Valida tamanho
 		if (strlen($cpf) != 11)
-			return false;
+			throw new RuleException( "CPF must be length 11" );
 		$all_equals = true;
 		for ( $i = 1; $i<11; ++$i ) {
 			if ( $cpf[$i] !== $cpf[$i-1] ) {
@@ -275,19 +278,19 @@ class RuleSet {
 			}
 		}
 		if ( $all_equals )
-			return false;
+			throw new RuleException( "CPF must have different digits" );
 		// Calcula e confere primeiro dígito verificador
 		for ($i = 0, $j = 10, $soma = 0; $i < 9; $i++, $j--)
 			$soma += $cpf{$i} * $j;
 		$resto = $soma % 11;
 		if ($cpf{9} != ($resto < 2 ? 0 : 11 - $resto))
-			return false;
+			throw new RuleException( "Invalid CPF" );
 		// Calcula e confere segundo dígito verificador
 		for ($i = 0, $j = 11, $soma = 0; $i < 10; $i++, $j--)
 			$soma += $cpf{$i} * $j;
 		$resto = $soma % 11;
 		if ( $cpf{10} != ($resto < 2 ? 0 : 11 - $resto) )
-			return false;
+			throw new RuleException( "Invalid CPF" );
 		return $cpf;
 	}
 	// Brazilian CNPJ validator
@@ -295,7 +298,7 @@ class RuleSet {
 		$cnpj = preg_replace('/[^0-9]/', '', (string) $cnpj);
 		// Valida tamanho
 		if (strlen($cnpj) != 14)
-			return false;
+			throw new RuleException( "CNPJ must have length 14" );
 		$all_equals = true;
 		for ( $i = 1; $i<14; ++$i ) {
 			if ( $cnpj[$i] !== $cnpj[$i-1] ) {
@@ -304,7 +307,7 @@ class RuleSet {
 			}
 		}
 		if ( $all_equals )
-			return false;
+			throw new RuleException( "Invalid CNPJ" );
 		// Valida primeiro dígito verificador
 		for ($i = 0, $j = 5, $soma = 0; $i < 12; $i++)
 		{
@@ -313,7 +316,7 @@ class RuleSet {
 		}
 		$resto = $soma % 11;
 		if ($cnpj{12} != ($resto < 2 ? 0 : 11 - $resto))
-			return false;
+			throw new RuleException( "Invalid CNPJ" );
 		// Valida segundo dígito verificador
 		for ($i = 0, $j = 6, $soma = 0; $i < 13; $i++)
 		{
@@ -322,7 +325,7 @@ class RuleSet {
 		}
 		$resto = $soma % 11;
 		if ( $cnpj{13} != ($resto < 2 ? 0 : 11 - $resto) )
-			return false;
+			throw new RuleException( "Invalid CNPJ" );
 		return $cnpj;
 	}
 
