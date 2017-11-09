@@ -88,7 +88,7 @@ class DB {
 		if ( static::isSingleton() )
 			$k = get_called_class();
 		if ( !@DB::$instances[ $k ] )
-			@DB::$instances[ $k ]	= new Connection( static::createConnection(), get_called_class() );
+			@DB::$instances[ $k ]	= new Connection( function() { return static::createConnection(); } );
 		return DB::$instances[ $k ];
 	}
 }

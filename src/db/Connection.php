@@ -1,7 +1,7 @@
 <?php namespace LibWeb\db;
 
-use \PDO;
-use \PDOException;
+use PDO;
+use PDOException;
 
 class Connection {
 	private $db;
@@ -9,15 +9,22 @@ class Connection {
 	private $inTransaction;
 	private $lastQuery;
 	private $debugMode;
-	private $dbClass;
+	private $dbFactory;
 	/**
 	 * Construct the PDO connection
 	 */
-	public function __construct( $db, $dbClass = null ) {
-		$this->db = $db;
+	public function __construct( $db ) {
 		$this->inTransaction = false;
 		$this->lastQuery     = null;
-		$this->dbClass       = $dbClass;
+		if ( is_callable( $db ) ) {
+			$this->dbFactory = $db;
+			$this->reconnect();
+		} else if ( $db instanceof PDO ) {
+			$this->db = $db;
+			$this->dbFactory = null;
+		} else {
+			throw new \InvalidArgumentException( "Parameter must be a factory of PDO objects" );
+		}
 	}
 	// Get the internal PDO object
 	public function getPDO() { return $this->db; }
@@ -31,6 +38,10 @@ class Connection {
 	}
 	/// Refresh the connection status
 	public function ping() {
+		if ( !$this->db ) {
+			$this->reconnect();
+			return;
+		}
 		try {
 			$this->db->query( "SHOW STATUS" );
 		} catch( \PDOException $e ) {
@@ -41,9 +52,13 @@ class Connection {
 	}
 	/// Reconnect
 	public function reconnect() {
-		if ( !$this->dbClass )
-			throw new \LogicException( "Cannot reconnect without class parameter" );
-		$this->db = call_user_func( array( $this->dbClass, 'createConnection' ) );
+		if ( !$this->dbFactory )
+			throw new \LogicException( "Cannot reconnect without factory parameter." );
+		$this->db = call_user_func( $this->dbFactory );
+		if ( !$this->db )
+			throw new \RuntimeException( "Could not create the connection" );
+		if ( !$this->db instanceof PDO )
+			throw new \RuntimeException( "Factory must create an instance of PDO" );
 		$this->inTransaction = false;
 		$this->lastQuery     = null;
 		if ( $this->debugMode ) {
