@@ -14,6 +14,7 @@ class State {
 	private $parent_;
     private $root_;
 	private $key_;
+	private $currentRule_;
 
 	/// Construct
 	public function __construct( $value, $key = null, $parent = null ) {
@@ -33,6 +34,10 @@ class State {
 			$this->key_  = $key;
 		}
 	}
+	public function setCurrentRuleInternal( $rules ) { $this->currentRule_ = $rules; }
+	public function getCurrentRule() { return $this->currentRule_; }
+	
+	public function getInitial() { return $this->initial_; }
 	public function getParent() {
 		return $this->parent_;
 	}

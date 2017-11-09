@@ -20,45 +20,8 @@ abstract class Rule {
 	 * Normalize the rule
 	 */
 	public static function tryNormalize( $rule ) {
-		if ( is_array( $rule ) ) {
-			$normalized = array();
-			$special    = array();
-			foreach ( $rule as $key => $value ) {
-				// Skip keys beginning with $ unless double $$
-				if ( @$key[0] === '$' ) {
-					$key = substr( $key, 1 );
-					if ( @$key[0] !== '$' ) {
-						$special[ $key ] = $value;
-						continue;
-					}
-				}
-
-				// Normalize the rule
-				$value = self::normalize( $value );
-
-				// Check optional and skippable flag
-				$childFlags = 0;
-				$keyLen = strlen( $key );
-				if ( @$key[$keyLen-1] === '?' ) {
-					if ( @$key[$keyLen-2] === '?' ) {
-						$childFlags = self::FLAG_SKIPPABLE  | self::FLAG_OPTIONAL;
-						$key = substr( $key, 0, $keyLen - 2 );
-					} else {
-						$childFlags = self::FLAG_OPTIONAL;
-						$key = substr( $key, 0, $keyLen - 1 );
-					}
-				}
-
-				// Normalize
-				if ( $childFlags )
-					$value = $value->withFlags( $childFlags );
-
-				// Save the key
-				$normalized[ $key ] = $value;
-			}
-			
-			$rule = new rule\ObjectRule( $normalized, $special );
-		}
+		if ( is_array( $rule ) )
+			$rule = new rule\ObjectRule( $rule );
 		if ( !$rule instanceof Rule )
 			return null;
 		return $rule;
@@ -84,6 +47,7 @@ abstract class Rule {
 				return;
 			}
 		}
+		$state->setCurrentRuleInternal( $rule );
 		$rule->apply( $state );
 	}
 	/**
@@ -119,6 +83,28 @@ abstract class Rule {
 	/// Apply a rule
 	abstract public function _clone();
 	abstract public function apply( $state );
+
+
+	public static function createGetterFor( $value ) {
+		$getter = null;
+		if ( !$value ) {
+			$getter = new getter\NullGetter;
+		} else if ( is_array( $value ) ) {
+			$getter = new getter\ArrayGetter( $value );
+		} else if ( is_object( $value ) ) {
+			if ( $value instanceof \stdClass )
+				$getter = new getter\ArrayGetter( ( array ) $value );
+			else  if ( method_exists( $value, 'validatorGet' ) )
+				$getter = new getter\ObjectGetter( $value );
+			else if ( $value instanceof getter\Getter )
+				$getter = $value;
+			else
+				throw new \InvalidArgumentException( "Cannot validate complex object without a validatorGet method." );
+		}
+		if ( !$getter )
+			throw new \InvalidArgumentException( "Cannot validate." );
+		return $getter;
+	}
 
 	// Flag
 	protected $flags_ = 0;

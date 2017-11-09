@@ -31,25 +31,51 @@ class RuleSetRaw extends Rule {
 	}
 
 	public static function same( $state, $field ) {
-		Rule::validateState( $state, $state->getParent()->rules[ $field ] );
-		if ( @$state->getParent()->value->{$field} != $state->value )
-			$state->setError( new \Exception( "Field must be the same as ".$field ) );
+		$parent = $state->getParent();
+		if ( !$parent )
+			throw new \InvalidArgumentException( "Can only be used inside an ObjectRule" );
+		$parentRule = $parent->getCurrentRule();
+		if ( !($parentRule instanceof rule\ObjectRule) )
+			throw new \InvalidArgumentException( "Can only be used inside an ObjectRule" );
+
+		$getter = Rule::createGetterFor( $parent->value );
+		Rule::validateState( $state, $parentRule->getRule( $field ) );
+		if ( $getter->get( $field ) != $state->value )
+			$state->setError( new RuleException( "Field must be the same as ".$field ) );
 	}
 	public static function same__setup( $rule, $field ) {
-		$rule->dependencies_[] = $field;
+		$rule->dependsOn( $field );
 	}
 	
-	public static function ifField( $state, $field, $rules ) {
-		if ( @$state->getParent()->value->{$field} !== null ) {
-			Rule::validateState( $state, $rules );
-		} else
-			$state->value = null;
+	public static function mergeIf( $state, $fields, $rules, $rulesElse = null ) {
+		$merge = true;
+		foreach ( $fields as $key => $value ) {
+			if ( is_int( $key ) && !isset( $state->value->{$key} ) ) {
+				$merge = false;
+			} else if ( @$state->value->{$key} !== $value ) {
+				$merge = false;
+			}
+			if ( !$merge )
+				break;
+		}
+
+		$rules = $merge ? $rules : $rulesElse;
+		if ( !$rules )
+			return;
+
+
+		$childvalue = new getter\MergeGetter([ Rule::createGetterFor( $state->getInitial() ), Rule::createGetterFor( $state->value ) ]);
+		$childstate = new State( $childvalue );
+		Rule::validateState( $childstate, $rules );
+		foreach ( $childstate->value as $key => $value )
+			$state->value->{ $key } = $value;
+
+		$errors = $childstate->errors();
+		$state->mergeErrors( $errors );
 	}
-	public static function ifField__setup( $rule, $field, $rules ) {
-		$field = (array) $field;
-		foreach ( $field as $dep )
-			$rule->dependencies_[] = $dep;
-		$rule->getRoot()->flags_ |= Rule::FLAG_ALWAYS;
+	public static function mergeIf__setup( $rule, $fields, $rules ) {
+		foreach ( $fields as $key => $value )
+			$rule->dependsOn( is_int( $key ) ? $value : $key );
 	}
 
 

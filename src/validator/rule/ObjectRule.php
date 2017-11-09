@@ -10,29 +10,51 @@ use LibWeb\validator\getter\ObjectGetter;
 class ObjectRule extends Rule {
 	private $rules_;
 	private $specialRules_;
-	public function __construct( $rules, $special ) {
-		$this->rules_ = $rules;
+	
+	public function __construct( $rules ) {
+		$normalized = array();
+		$special    = array();
+		foreach ( $rules as $key => $value ) {
+			// Skip keys beginning with $ unless double $$
+			if ( @$key[0] === '$' ) {
+				$key = substr( $key, 1 );
+				if ( @$key[0] !== '$' ) {
+					$special[ $key ] = $value;
+					continue;
+				}
+			}
+
+			// Normalize the rule
+			$value = Rule::normalize( $value );
+
+			// Check optional and skippable flag
+			$childFlags = 0;
+			$keyLen = strlen( $key );
+			if ( @$key[$keyLen-1] === '?' ) {
+				if ( @$key[$keyLen-2] === '?' ) {
+					$childFlags = self::FLAG_SKIPPABLE  | self::FLAG_OPTIONAL;
+					$key = substr( $key, 0, $keyLen - 2 );
+				} else {
+					$childFlags = self::FLAG_OPTIONAL;
+					$key = substr( $key, 0, $keyLen - 1 );
+				}
+			}
+
+			// Normalize
+			if ( $childFlags )
+				$value = $value->withFlags( $childFlags );
+
+			// Save the key
+			$normalized[ $key ] = $value;
+		}
+		$this->rules_ = $normalized;
 		$this->specialRules_ = $special;
 	}
 	public function _clone() {
 		return new ObjectRule( $this->rules_, $this->specialRules_ );
 	}
 	public function apply( $state ) {
-		$getter = null;
-		if ( !$state->value ) {
-			$getter = new NullGetter;
-		} else if ( is_array( $state->value ) ) {
-			$getter = new ArrayGetter( $state->value );
-		} else if ( is_object( $state->value ) ) {
-			if ( $state->value instanceof \stdClass )
-				$getter = new ArrayGetter( ( array ) $state->value );
-			else  if ( method_exists( $state->value, 'validatorGet' ) )
-				$getter = new ObjectGetter( $state->value );
-			else
-				throw new \InvalidArgumentException( "Cannot validate complex object without a validatorGet method." );
-		}
-		if ( !$getter )
-			throw new \InvalidArgumentException( "Cannot validate." );
+		$getter = Rule::createGetterFor( $state->value );
 		
 		$result = array();
 		foreach ( $this->rules_ as $key => $rule ) {
@@ -50,4 +72,9 @@ class ObjectRule extends Rule {
 			Rule::validateState( $state, $this->specialRules_['after'] );
 		}
 	}
+
+	public function getRule( $field ) {
+		return $this->rules_[ $field ];
+	}
+
 };
