@@ -173,7 +173,8 @@ class Request {
 		$param = $this->param( $key );
 		if ( $param !== null )
 			return $param;
-		return @$this->processedFiles_[ $key ];
+		$files = $this->files();
+		return @$files[ $key ];
 	}
 	// Get the full request URI
 	public function uri() {
