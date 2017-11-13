@@ -8,7 +8,8 @@
 		"maximebf/debugbar": "^1.14",
 		"marcj/topsort": "^1.1",
 		"renanhangai/validator": "^1.2",
-		"renanhangai/libweb-core": "^0.0.1"
+		"renanhangai/libweb-core": "^0.0.1",
+		"renanhangai/libweb-api": "^0.0.1"
 	},
 	"license": "ISC",
 	"authors": [
