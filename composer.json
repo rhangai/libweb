@@ -20,7 +20,7 @@
         "marcj/topsort": "^1.1",
         "renanhangai/validator": "^1.2",
         "renanhangai/libweb-core": "^0.1.2",
-        "renanhangai/libweb-api": "^0.2.1"
+        "renanhangai/libweb-api": "^0.2.2"
     },
     "require-dev": {
         "phpunit/phpunit": "^6.0"
