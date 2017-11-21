@@ -1,34 +1,34 @@
 {
-    "name": "renanhangai/libweb",
-    "description": "Some PHP utility classes",
-    "version": "4.0.3",
-    "type": "library",
-    "license": "ISC",
-    "authors": [
-        {
-            "name": "renanhangai",
-            "email": "hangai.renan@gmail.com"
-        }
-    ],
-    "autoload": {
-        "psr-4": {
-            "LibWeb\\": "src/"
-        }
-    },
-    "require": {
-        "rtlopez/decimal": "^1.0",
-        "marcj/topsort": "^1.1",
-        "renanhangai/validator": "^1.2",
-        "renanhangai/libweb-core": "^0.1.2",
-        "renanhangai/libweb-api": "^0.2.2"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^6.0"
-    },
-    "suggest": {
-        "maximebf/debugbar": "Provides better debug functionality"
-    },
-    "scripts": {
-        "test": "phpunit --bootstrap vendor/autoload.php test"
-    }
+	"name": "renanhangai/libweb",
+	"description": "Some PHP utility classes",
+	"version": "4.0.4",
+	"type": "library",
+	"license": "ISC",
+	"authors": [
+		{
+			"name": "renanhangai",
+			"email": "hangai.renan@gmail.com"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"LibWeb\\": "src/"
+		}
+	},
+	"require": {
+		"rtlopez/decimal": "^1.0",
+		"marcj/topsort": "^1.1",
+		"renanhangai/validator": "^1.2",
+		"renanhangai/libweb-core": "^0.1.2",
+		"renanhangai/libweb-api": "^0.2.2"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^6.0"
+	},
+	"suggest": {
+		"maximebf/debugbar": "Provides better debug functionality"
+	},
+	"scripts": {
+		"test": "phpunit --bootstrap vendor/autoload.php test"
+	}
 }
