@@ -19,7 +19,7 @@
         "rtlopez/decimal": "^1.0",
         "marcj/topsort": "^1.1",
         "renanhangai/validator": "^1.2",
-        "renanhangai/libweb-core": "^0.1.1",
+        "renanhangai/libweb-core": "^0.1.2",
         "renanhangai/libweb-api": "^0.2.1"
     },
     "require-dev": {
