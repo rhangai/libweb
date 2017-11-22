@@ -1,7 +1,7 @@
 {
 	"name": "renanhangai/libweb",
 	"description": "Some PHP utility classes",
-	"version": "4.0.6",
+	"version": "4.0.7",
 	"type": "library",
 	"license": "ISC",
 	"authors": [
@@ -19,8 +19,8 @@
 		"rtlopez/decimal": "^1.0",
 		"marcj/topsort": "^1.1",
 		"renanhangai/validator": "^1.2",
-		"renanhangai/libweb-core": "^0.1.3",
-		"renanhangai/libweb-api": "^0.2.2"
+		"renanhangai/libweb-core": "^0.1.4",
+		"renanhangai/libweb-api": "^0.2.4"
 	},
 	"require-dev": {
 		"phpunit/phpunit": "^6.0"
