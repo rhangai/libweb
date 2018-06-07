@@ -6,7 +6,8 @@
 	"require": {
 		"rtlopez/decimal": "^1.0",
 		"maximebf/debugbar": "^1.14",
-		"marcj/topsort": "^1.1"
+		"marcj/topsort": "^1.1",
+		"violet/streaming-json-encoder": "^1.1"
 	},
 	"license": "ISC",
 	"authors": [
