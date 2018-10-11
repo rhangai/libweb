@@ -48,7 +48,7 @@ class Config {
 	 * Internally set a configuration object
 	 */
     private static function setInternal( &$config, $path, $value, $i = 0 ) {
-		if ( is_string( $path ) )
+		if ( is_string( $path ) || is_int( $path ) )
 			return self::setInternal( $config, explode( ".", $path ), $value, $i );
 		if ( $i >= count( $path ) ) {
 			$config = $value;
